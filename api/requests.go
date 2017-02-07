@@ -9,6 +9,11 @@ import (
 	"log"
 )
 
+const (
+	PARTNER_ID   = "partner_id"
+	SERVER_TOKEN = "server_token"
+)
+
 type NambaTaxiApi struct {
 	partnerID string
 	serverToken string
@@ -34,12 +39,15 @@ func (api *NambaTaxiApi) GetFares() error {
 
 func (api *NambaTaxiApi) makePostRequest(uri string) (string, error) {
 	resp, err := http.PostForm(api.getApiURL(uri),
-		url.Values{"partner_id":   {api.partnerID},
-			   "server_token": {api.serverToken},
+		url.Values{
+			PARTNER_ID:   {api.partnerID},
+			SERVER_TOKEN: {api.serverToken},
 		})
+
 	if err != nil {
 		panic(err)
 	}
+
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 
