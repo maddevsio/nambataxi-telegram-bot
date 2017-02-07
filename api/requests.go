@@ -1,29 +1,39 @@
 package api
 
 import (
-	"log"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"fmt"
+	"errors"
+	"log"
 )
 
 type NambaTaxiApi struct {
 	partnerID string
 	serverToken string
+	url string
+	version string
 }
 
-func NewNambaTaxiApi(partnerID string, serverToken string) NambaTaxiApi {
-	return NambaTaxiApi{partnerID, serverToken}
+type Fare struct {
+
 }
 
-func (api *NambaTaxiApi) GetFares() {
-	log.Print(api.partnerID)
-	log.Print(api.serverToken)
-	api.makePostRequest("https://partners.staging.swift.kg/api/v1/fares/")
+func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
+	return NambaTaxiApi{partnerID, serverToken, url, version}
 }
 
-func (api *NambaTaxiApi) makePostRequest(apiURL string) string {
-	resp, err := http.PostForm(apiURL,
+func (api *NambaTaxiApi) GetFares() error {
+	_, err := api.makePostRequest("fares")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (api *NambaTaxiApi) makePostRequest(uri string) (string, error) {
+	resp, err := http.PostForm(api.getApiURL(uri),
 		url.Values{"partner_id":   {api.partnerID},
 			   "server_token": {api.serverToken},
 		})
@@ -32,7 +42,16 @@ func (api *NambaTaxiApi) makePostRequest(apiURL string) string {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	log.Printf("status %v", resp.Status)
-	log.Printf("body %v", string(body))
-	return ""
+
+	if resp.StatusCode != 200 {
+		return "", errors.New(resp.Status)
+	}
+
+	return string(body), nil
+}
+
+func (api *NambaTaxiApi) getApiURL(uri string) string {
+	urlString := fmt.Sprintf("%s/%s/%s/", api.url, api.version, uri)
+	log.Printf("API URL is: %v", urlString)
+	return urlString
 }
