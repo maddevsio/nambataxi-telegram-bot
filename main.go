@@ -3,10 +3,16 @@ package main
 import (
 	"log"
 	"gopkg.in/telegram-bot-api.v4"
+	"github.com/maddevsio/simple-config"
 )
 
+var (
+	config = simple_config.NewSimpleConfig("config", "yml")
+)
+
+
 func main() {
-	bot, err := tgbotapi.NewBotAPI("MyAwesomeBotToken")
+	bot, err := tgbotapi.NewBotAPI(config.GetString("token"))
 	if err != nil {
 		log.Panic(err)
 	}
