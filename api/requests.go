@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"errors"
 	"log"
+	"encoding/json"
 )
 
 const (
@@ -21,29 +22,36 @@ type NambaTaxiApi struct {
 	version string
 }
 
-type Fare struct {
-	Flagfall int `json:"flag_fall"`
-	Free_waiting int `json:"free_waiting"`
-	Full_description string `json:"full_description"`
-	Include_kilometers int `json:"include_kilometers"`
-	Id int `json:"id"`
-	Cost_per_kilometer int `json:"cost_per_kilometer"`
-	Name string `json:"name"`
+type Fares struct {
+	Fare []struct {
+		Flagfall float64 `json:"flagfall"`
+		Free_waiting float64 `json:"free_waiting"`
+		Full_description string `json:"full_description"`
+		Include_kilometers int `json:"include_kilometers"`
+		Id int `json:"id"`
+		Cost_per_kilometer float64 `json:"cost_per_kilometer"`
+		Name string `json:"name"`
+	} `json:"fares"`
 }
 
 func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
 	return NambaTaxiApi{partnerID, serverToken, url, version}
 }
 
-func (api *NambaTaxiApi) GetFares() error {
-	_, err := api.makePostRequest("fares")
+func (api *NambaTaxiApi) GetFares() (Fares, error) {
+	jsonData, err := api.makePostRequest("fares")
 	if err != nil {
-		return err
+		return Fares{}, err
 	}
-	return nil
+	fares := Fares{}
+	err = json.Unmarshal(jsonData, &fares)
+	if err != nil {
+		return Fares{}, err
+	}
+	return fares, nil
 }
 
-func (api *NambaTaxiApi) makePostRequest(uri string) (string, error) {
+func (api *NambaTaxiApi) makePostRequest(uri string) ([]byte, error) {
 	resp, err := http.PostForm(api.getApiURL(uri),
 		url.Values{
 			PARTNER_ID:   {api.partnerID},
@@ -58,10 +66,10 @@ func (api *NambaTaxiApi) makePostRequest(uri string) (string, error) {
 	body, err := ioutil.ReadAll(resp.Body)
 
 	if resp.StatusCode != 200 {
-		return "", errors.New(resp.Status)
+		return nil, errors.New(resp.Status)
 	}
 
-	return string(body), nil
+	return body, nil
 }
 
 func (api *NambaTaxiApi) getApiURL(uri string) string {

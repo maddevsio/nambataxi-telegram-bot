@@ -15,6 +15,10 @@ func TestGetFares(t *testing.T) {
 		config.GetString("url"),
 		config.GetString("version"),
 	)
-	err := api.GetFares()
+	fares, err := api.GetFares()
 	assert.NoError(t, err)
+	assert.Equal(t, fares.Fare[0].Id, 1)
+	assert.Equal(t, fares.Fare[1].Id, 11)
+	assert.Equal(t, fares.Fare[1].Flagfall, 100.0)
+	assert.Equal(t, len(fares.Fare), 5)
 }
