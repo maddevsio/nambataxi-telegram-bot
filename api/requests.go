@@ -22,7 +22,13 @@ type NambaTaxiApi struct {
 }
 
 type Fare struct {
-
+	Flagfall int `json:"flag_fall"`
+	Free_waiting int `json:"free_waiting"`
+	Full_description string `json:"full_description"`
+	Include_kilometers int `json:"include_kilometers"`
+	Id int `json:"id"`
+	Cost_per_kilometer int `json:"cost_per_kilometer"`
+	Name string `json:"name"`
 }
 
 func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
