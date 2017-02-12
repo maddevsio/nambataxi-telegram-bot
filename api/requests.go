@@ -34,6 +34,13 @@ type Fares struct {
 	} `json:"fares"`
 }
 
+type PaymentMethods struct {
+	PaymentMethod []struct {
+		PaymentMethodId int `json:"payment_method_id"`
+		Description string `json:"description"`
+	} `json:"payment_methods"`
+}
+
 func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
 	return NambaTaxiApi{partnerID, serverToken, url, version}
 }
@@ -49,6 +56,19 @@ func (api *NambaTaxiApi) GetFares() (Fares, error) {
 		return Fares{}, err
 	}
 	return fares, nil
+}
+
+func (api *NambaTaxiApi) GetPaymentMethods() (PaymentMethods, error) {
+	jsonData, err := api.makePostRequest("payment-methods")
+	if err != nil {
+		return PaymentMethods{}, err
+	}
+	paymentMethods := PaymentMethods{}
+	err = json.Unmarshal(jsonData, &paymentMethods)
+	if err != nil {
+		return PaymentMethods{}, err
+	}
+	return paymentMethods, nil
 }
 
 func (api *NambaTaxiApi) makePostRequest(uri string) ([]byte, error) {
