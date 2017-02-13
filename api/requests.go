@@ -41,26 +41,42 @@ type PaymentMethods struct {
 	} `json:"payment_methods"`
 }
 
+type RequestOptions struct {
+	RequestOption []struct {
+		Id int `json:"id"`
+		Title string `json:"title"`
+	} `json:"request_options"`
+}
+
 func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
 	return NambaTaxiApi{partnerID, serverToken, url, version}
 }
 
 func (api *NambaTaxiApi) GetFares() (Fares, error) {
-	fares := Fares{}
-	err := api.makePostRequestAndMapStructure(&fares, "fares")
+	structure := Fares{}
+	err := api.makePostRequestAndMapStructure(&structure, "fares")
 	if err != nil {
 		return Fares{}, err
 	}
-	return fares, nil
+	return structure, nil
 }
 
 func (api *NambaTaxiApi) GetPaymentMethods() (PaymentMethods, error) {
-	paymentMethods := PaymentMethods{}
-	err := api.makePostRequestAndMapStructure(&paymentMethods, "payment-methods")
+	structure := PaymentMethods{}
+	err := api.makePostRequestAndMapStructure(&structure, "payment-methods")
 	if err != nil {
 		return PaymentMethods{}, err
 	}
-	return paymentMethods, nil
+	return structure, nil
+}
+
+func (api *NambaTaxiApi) GetRequestOptions() (RequestOptions, error) {
+	structure := RequestOptions{}
+	err := api.makePostRequestAndMapStructure(&structure, "request-options")
+	if err != nil {
+		return RequestOptions{}, err
+	}
+	return structure, nil
 }
 
 func (api *NambaTaxiApi) makePostRequestAndMapStructure(structure interface{}, uri string) (error) {
@@ -93,6 +109,7 @@ func (api *NambaTaxiApi) makePostRequest(uri string) ([]byte, error) {
 		return nil, errors.New(resp.Status)
 	}
 
+	//log.Print("%v", string(body))
 	return body, nil
 }
 
