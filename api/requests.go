@@ -54,7 +54,7 @@ func NewNambaTaxiApi(partnerID string, serverToken string, url string, version s
 
 func (api *NambaTaxiApi) GetFares() (Fares, error) {
 	structure := Fares{}
-	err := api.makePostRequestAndMapStructure(&structure, "fares")
+	err := api.makePostRequestAndMapStructure(&structure, "fares", make(map[string][]string))
 	if err != nil {
 		return Fares{}, err
 	}
@@ -63,7 +63,7 @@ func (api *NambaTaxiApi) GetFares() (Fares, error) {
 
 func (api *NambaTaxiApi) GetPaymentMethods() (PaymentMethods, error) {
 	structure := PaymentMethods{}
-	err := api.makePostRequestAndMapStructure(&structure, "payment-methods")
+	err := api.makePostRequestAndMapStructure(&structure, "payment-methods", make(map[string][]string))
 	if err != nil {
 		return PaymentMethods{}, err
 	}
@@ -72,15 +72,15 @@ func (api *NambaTaxiApi) GetPaymentMethods() (PaymentMethods, error) {
 
 func (api *NambaTaxiApi) GetRequestOptions() (RequestOptions, error) {
 	structure := RequestOptions{}
-	err := api.makePostRequestAndMapStructure(&structure, "request-options")
+	err := api.makePostRequestAndMapStructure(&structure, "request-options", make(map[string][]string))
 	if err != nil {
 		return RequestOptions{}, err
 	}
 	return structure, nil
 }
 
-func (api *NambaTaxiApi) makePostRequestAndMapStructure(structure interface{}, uri string) (error) {
-	jsonData, err := api.makePostRequest(uri)
+func (api *NambaTaxiApi) makePostRequestAndMapStructure(structure interface{}, uri string, postParams map[string][]string) (error) {
+	jsonData, err := api.makePostRequest(uri, postParams)
 	if err != nil {
 		return err
 	}
@@ -91,12 +91,17 @@ func (api *NambaTaxiApi) makePostRequestAndMapStructure(structure interface{}, u
 	return nil
 }
 
-func (api *NambaTaxiApi) makePostRequest(uri string) ([]byte, error) {
-	resp, err := http.PostForm(api.getApiURL(uri),
-		url.Values{
-			PARTNER_ID:   {api.partnerID},
-			SERVER_TOKEN: {api.serverToken},
-		})
+func (api *NambaTaxiApi) makePostRequest(uri string, postParams map[string][]string) ([]byte, error) {
+	var values url.Values = map[string][]string{
+		PARTNER_ID:   {api.partnerID},
+		SERVER_TOKEN: {api.serverToken},
+	}
+
+	for key, value := range postParams {
+		values[key] = value
+	}
+
+	resp, err := http.PostForm(api.getApiURL(uri), values)
 
 	if err != nil {
 		panic(err)
