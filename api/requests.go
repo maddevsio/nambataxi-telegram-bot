@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 	"encoding/json"
+	"strconv"
 )
 
 const (
@@ -51,6 +52,14 @@ type RequestOptions struct {
 type Order struct {
 	OrderId int `json:"order_id"`
 	Message string `json:"message"`
+	Status string `json:"status"`
+	Driver struct {
+		Name string `json:"name"`
+		PhoneNumber string `json:"phone_number"`
+		CabNumber string `json:"cab_number"`
+		LicensePlate string `json:"license_plate"`
+		Make string `json:"make"`
+	} `json:"driver"`
 }
 
 func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
@@ -87,6 +96,15 @@ func (api *NambaTaxiApi) GetRequestOptions() (RequestOptions, error) {
 func (api *NambaTaxiApi) MakeOrder(orderOptions map[string][]string) (Order, error) {
 	structure := Order{}
 	err := api.makePostRequestAndMapStructure(&structure, "requests", orderOptions)
+	if err != nil {
+		return Order{}, err
+	}
+	return structure, nil
+}
+
+func (api *NambaTaxiApi) GetOrder(id int) (Order, error) {
+	structure := Order{}
+	err := api.makePostRequestAndMapStructure(&structure, "requests/"+strconv.Itoa(id), make(map[string][]string))
 	if err != nil {
 		return Order{}, err
 	}

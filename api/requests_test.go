@@ -43,7 +43,7 @@ func TestGetRequestOptions(t *testing.T) {
 	assert.Equal(t, 0, len(requestOptions.RequestOption))
 }
 
-func TestMakeOrder(t *testing.T) {
+func TestMakeOrderAndGetOrder(t *testing.T) {
 	api := getApi()
 
 	orderOptions := map[string][]string{
@@ -52,7 +52,13 @@ func TestMakeOrder(t *testing.T) {
 		"fare":         {"1"},
 	}
 
-	order, err := api.MakeOrder(orderOptions)
+	order1, err := api.MakeOrder(orderOptions)
 	assert.NoError(t, err)
-	assert.Equal(t, "success", order.Message)
+	assert.Equal(t, "success", order1.Message)
+
+	order2, err := api.GetOrder(order1.OrderId)
+	assert.NoError(t, err)
+	assert.Equal(t, order1.OrderId, order2.OrderId)
+	assert.Equal(t, "Новый заказ", order2.Status)
+
 }
