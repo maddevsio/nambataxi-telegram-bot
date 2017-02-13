@@ -48,6 +48,11 @@ type RequestOptions struct {
 	} `json:"request_options"`
 }
 
+type Order struct {
+	OrderId int `json:"order_id"`
+	Message string `json:"message"`
+}
+
 func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
 	return NambaTaxiApi{partnerID, serverToken, url, version}
 }
@@ -75,6 +80,15 @@ func (api *NambaTaxiApi) GetRequestOptions() (RequestOptions, error) {
 	err := api.makePostRequestAndMapStructure(&structure, "request-options", make(map[string][]string))
 	if err != nil {
 		return RequestOptions{}, err
+	}
+	return structure, nil
+}
+
+func (api *NambaTaxiApi) MakeOrder(orderOptions map[string][]string) (Order, error) {
+	structure := Order{}
+	err := api.makePostRequestAndMapStructure(&structure, "requests", orderOptions)
+	if err != nil {
+		return Order{}, err
 	}
 	return structure, nil
 }

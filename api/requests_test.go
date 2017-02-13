@@ -43,3 +43,16 @@ func TestGetRequestOptions(t *testing.T) {
 	assert.Equal(t, 0, len(requestOptions.RequestOption))
 }
 
+func TestMakeOrder(t *testing.T) {
+	api := getApi()
+
+	orderOptions := map[string][]string{
+		"phone_number": {"0555121314"},
+		"address":      {"ул Советская, дом 1, палата 6"},
+		"fare":         {"1"},
+	}
+
+	order, err := api.MakeOrder(orderOptions)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", order.Message)
+}
