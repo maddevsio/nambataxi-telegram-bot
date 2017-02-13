@@ -46,12 +46,8 @@ func NewNambaTaxiApi(partnerID string, serverToken string, url string, version s
 }
 
 func (api *NambaTaxiApi) GetFares() (Fares, error) {
-	jsonData, err := api.makePostRequest("fares")
-	if err != nil {
-		return Fares{}, err
-	}
 	fares := Fares{}
-	err = json.Unmarshal(jsonData, &fares)
+	err := api.makePostRequestAndMapStructure(&fares, "fares")
 	if err != nil {
 		return Fares{}, err
 	}
@@ -59,16 +55,24 @@ func (api *NambaTaxiApi) GetFares() (Fares, error) {
 }
 
 func (api *NambaTaxiApi) GetPaymentMethods() (PaymentMethods, error) {
-	jsonData, err := api.makePostRequest("payment-methods")
-	if err != nil {
-		return PaymentMethods{}, err
-	}
 	paymentMethods := PaymentMethods{}
-	err = json.Unmarshal(jsonData, &paymentMethods)
+	err := api.makePostRequestAndMapStructure(&paymentMethods, "payment-methods")
 	if err != nil {
 		return PaymentMethods{}, err
 	}
 	return paymentMethods, nil
+}
+
+func (api *NambaTaxiApi) makePostRequestAndMapStructure(structure interface{}, uri string) (error) {
+	jsonData, err := api.makePostRequest(uri)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(jsonData, structure)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (api *NambaTaxiApi) makePostRequest(uri string) ([]byte, error) {
