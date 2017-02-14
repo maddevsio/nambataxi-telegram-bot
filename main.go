@@ -12,7 +12,7 @@ var (
 
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI(config.GetString("token"))
+	bot, err := tgbotapi.NewBotAPI(config.GetString("bot_token"))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -26,6 +26,22 @@ func main() {
 
 	updates, err := bot.GetUpdatesChan(u)
 
+	keyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Быстрый заказ такси"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Заказ такси"),
+			tgbotapi.NewKeyboardButton("Машины рядом"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Тарифы"),
+			tgbotapi.NewKeyboardButton("Помощь"),
+		),
+	)
+
+	keyboard.OneTimeKeyboard = true
+
 	for update := range updates {
 		if update.Message == nil {
 			continue
@@ -35,6 +51,7 @@ func main() {
 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyToMessageID = update.Message.MessageID
+		msg.ReplyMarkup = keyboard
 
 		bot.Send(msg)
 	}
