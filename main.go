@@ -51,14 +51,13 @@ func main() {
 
 		if update.Message.Text == "Быстрый заказ такси" {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш телефон")
+			msg.ReplyMarkup = keyboard
+			bot.Send(msg)
+		} else {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Что-что?")
 			msg.ReplyToMessageID = update.Message.MessageID
 			msg.ReplyMarkup = keyboard
 			bot.Send(msg)
 		}
-
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Что-что?")
-		msg.ReplyToMessageID = update.Message.MessageID
-		msg.ReplyMarkup = keyboard
-		bot.Send(msg)
 	}
 }
