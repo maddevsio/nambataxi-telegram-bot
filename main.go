@@ -30,14 +30,14 @@ func main() {
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Быстрый заказ такси"),
 		),
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Заказ такси"),
-			tgbotapi.NewKeyboardButton("Машины рядом"),
-		),
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Тарифы"),
-			tgbotapi.NewKeyboardButton("Помощь"),
-		),
+		//tgbotapi.NewKeyboardButtonRow(
+		//	tgbotapi.NewKeyboardButton("Заказ такси"),
+		//	tgbotapi.NewKeyboardButton("Машины рядом"),
+		//),
+		//tgbotapi.NewKeyboardButtonRow(
+		//	tgbotapi.NewKeyboardButton("Тарифы"),
+		//	tgbotapi.NewKeyboardButton("Помощь"),
+		//),
 	)
 
 	keyboard.OneTimeKeyboard = true
@@ -49,10 +49,16 @@ func main() {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+		if update.Message == "Быстрый заказ такси" {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш телефон")
+			msg.ReplyToMessageID = update.Message.MessageID
+			msg.ReplyMarkup = keyboard
+			bot.Send(msg)
+		}
+
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Что-что?")
 		msg.ReplyToMessageID = update.Message.MessageID
 		msg.ReplyMarkup = keyboard
-
 		bot.Send(msg)
 	}
 }
