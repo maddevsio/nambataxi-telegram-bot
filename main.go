@@ -49,7 +49,7 @@ func main() {
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		if update.Message == "Быстрый заказ такси" {
+		if update.Message.Text == "Быстрый заказ такси" {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш телефон")
 			msg.ReplyToMessageID = update.Message.MessageID
 			msg.ReplyMarkup = keyboard
