@@ -1,0 +1,5 @@
+bot_token:
+partner_id:
+server_token:
+url: https://partners.staging.swift.kg/api
+version: v1
