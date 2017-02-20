@@ -4,7 +4,6 @@ import (
 	"log"
 	"gopkg.in/telegram-bot-api.v4"
 	"github.com/maddevsio/simple-config"
-	"strings"
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
 	"fmt"
 )
@@ -13,8 +12,7 @@ type Session struct {
 	Phone string
 	Address string
 	FareId int
-	OrderStarted bool
-	OrderCreated bool
+	State string
 }
 
 var (
@@ -25,6 +23,9 @@ var (
 
 const (
 	FARE_STANDART = "1"
+	STATE_NEED_PHONE = "need phone"
+	STATE_NEED_ADDRESS = "need address"
+	STATE_ORDER_CREATED = "order created"
 )
 
 func main() {
@@ -78,37 +79,58 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	keyboard.OneTimeKeyboard = true
 
 	if session := sessions[update.Message.Chat.ID]; session != nil {
-		if session.OrderStarted {
-			if strings.HasPrefix(update.Message.Text, "+996") {
-				session.Phone = update.Message.Text
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите адрес")
-				bot.Send(msg)
-				return
-			} else if session.Phone != "" && session.Address == "" {
-				session.Address = update.Message.Text
-				orderOptions := map[string][]string{
-					"phone_number": {session.Phone},
-					"address":      {session.Address},
-					"fare":         {FARE_STANDART},
-				}
+		switch session.State {
 
-				order, err := nambaTaxiApi.MakeOrder(orderOptions)
-				if err != nil {
-					delete(sessions, update.Message.Chat.ID)
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка создания заказа. Попробуйте еще раз")
-					bot.Send(msg)
-					return
-				}
-				session.OrderCreated = true
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
-				bot.Send(msg)
-				return
-			} else if session.OrderCreated {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Машина скоро будет")
+		case STATE_NEED_PHONE:
+			session.Phone = update.Message.Text
+			session.State = STATE_NEED_ADDRESS
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите адрес")
+			bot.Send(msg)
+			return
+
+		case STATE_NEED_ADDRESS:
+			session.Address = update.Message.Text
+			orderOptions := map[string][]string{
+				"phone_number": {session.Phone},
+				"address":      {session.Address},
+				"fare":         {FARE_STANDART},
+			}
+
+			order, err := nambaTaxiApi.MakeOrder(orderOptions)
+			if err != nil {
+				delete(sessions, update.Message.Chat.ID)
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка создания заказа. Попробуйте еще раз")
 				bot.Send(msg)
 				return
 			}
-		} else {
+			session.State = STATE_ORDER_CREATED
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
+			msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
+				tgbotapi.NewKeyboardButtonRow(
+					tgbotapi.NewKeyboardButton("Узнать статус моего заказа"),
+				),
+				tgbotapi.NewKeyboardButtonRow(
+					tgbotapi.NewKeyboardButton("Отменить мой заказ"),
+				),
+			)
+			bot.Send(msg)
+			return
+
+		case STATE_ORDER_CREATED:
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Машина скоро будет")
+			msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
+				tgbotapi.NewKeyboardButtonRow(
+					tgbotapi.NewKeyboardButton("Узнать статус моего заказа"),
+				),
+				tgbotapi.NewKeyboardButtonRow(
+					tgbotapi.NewKeyboardButton("Отменить мой заказ"),
+				),
+			)
+			bot.Send(msg)
+			return
+
+		default:
+			delete(sessions, update.Message.Chat.ID)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Заказ не открыт. Откройте заново")
 			msg.ReplyToMessageID = update.Message.MessageID
 			msg.ReplyMarkup = keyboard
@@ -119,7 +141,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 	if update.Message.Text == "Быстрый заказ такси" {
 		sessions[update.Message.Chat.ID] = &Session{}
-		sessions[update.Message.Chat.ID].OrderStarted = true
+		sessions[update.Message.Chat.ID].State = STATE_NEED_PHONE
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш телефон. Например: +996555112233")
 		bot.Send(msg)
 		return
