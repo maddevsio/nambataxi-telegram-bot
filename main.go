@@ -6,6 +6,7 @@ import (
 	"github.com/maddevsio/simple-config"
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
 	"fmt"
+	"strings"
 )
 
 type Session struct {
@@ -86,6 +87,11 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		switch session.State {
 
 		case STATE_NEED_PHONE:
+			if !strings.HasPrefix(update.Message.Text, "+996") {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон должен начинаться с +996")
+				bot.Send(msg)
+				return
+			}
 			session.Phone = update.Message.Text
 			session.State = STATE_NEED_ADDRESS
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите адрес")
@@ -122,10 +128,18 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				return
 			}
 
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Машина скоро будет. Статус вашего заказа: %v", session.Order.Status))
-			msg.ReplyMarkup = orderKeyboard
-			bot.Send(msg)
-			return
+			order, err := nambaTaxiApi.GetOrder(session.Order.OrderId)
+			if err != nil {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения заказа: %v", err))
+				msg.ReplyMarkup = orderKeyboard
+				bot.Send(msg)
+				return
+			} else {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Машина скоро будет. Статус вашего заказа: %v", order.Status))
+				msg.ReplyMarkup = orderKeyboard
+				bot.Send(msg)
+				return
+			}
 
 		default:
 			delete(sessions, update.Message.Chat.ID)
