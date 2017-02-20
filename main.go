@@ -5,6 +5,8 @@ import (
 	"gopkg.in/telegram-bot-api.v4"
 	"github.com/maddevsio/simple-config"
 	"strings"
+	"github.com/maddevsio/nambataxi-telegram-bot/api"
+	"fmt"
 )
 
 type Session struct {
@@ -18,9 +20,22 @@ type Session struct {
 var (
 	config = simple_config.NewSimpleConfig("config", "yml")
 	sessions = make(map[int64]*Session)
+	nambaTaxiApi api.NambaTaxiApi
+)
+
+const (
+	FARE_STANDART = "1"
 )
 
 func main() {
+
+	nambaTaxiApi = api.NewNambaTaxiApi(
+		config.GetString("partner_id"),
+		config.GetString("server_token"),
+		config.GetString("url"),
+		config.GetString("version"),
+	)
+
 	bot, err := tgbotapi.NewBotAPI(config.GetString("bot_token"))
 	if err != nil {
 		log.Panic(err)
@@ -71,8 +86,21 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				return
 			} else if session.Phone != "" && session.Address == "" {
 				session.Address = update.Message.Text
+				orderOptions := map[string][]string{
+					"phone_number": {session.Phone},
+					"address":      {session.Address},
+					"fare":         {FARE_STANDART},
+				}
+
+				order, err := nambaTaxiApi.MakeOrder(orderOptions)
+				if err != nil {
+					delete(sessions, update.Message.Chat.ID)
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка создания заказа. Попробуйте еще раз")
+					bot.Send(msg)
+					return
+				}
 				session.OrderCreated = true
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Заказ создан!")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
 				bot.Send(msg)
 				return
 			} else if session.OrderCreated {
