@@ -13,6 +13,7 @@ type Session struct {
 	Address string
 	FareId int
 	State string
+	Order api.Order
 }
 
 var (
@@ -22,14 +23,13 @@ var (
 )
 
 const (
-	FARE_STANDART = "1"
-	STATE_NEED_PHONE = "need phone"
-	STATE_NEED_ADDRESS = "need address"
+	FARE_STANDART       = "1"
+	STATE_NEED_PHONE    = "need phone"
+	STATE_NEED_ADDRESS  = "need address"
 	STATE_ORDER_CREATED = "order created"
 )
 
 func main() {
-
 	nambaTaxiApi = api.NewNambaTaxiApi(
 		config.GetString("partner_id"),
 		config.GetString("server_token"),
@@ -66,14 +66,18 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Быстрый заказ такси"),
 		),
-		//tgbotapi.NewKeyboardButtonRow(
-		//	tgbotapi.NewKeyboardButton("Заказ такси"),
-		//	tgbotapi.NewKeyboardButton("Машины рядом"),
-		//),
-		//tgbotapi.NewKeyboardButtonRow(
-		//	tgbotapi.NewKeyboardButton("Тарифы"),
-		//	tgbotapi.NewKeyboardButton("Помощь"),
-		//),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Тарифы"),
+		),
+	)
+
+	orderKeyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Узнать статус моего заказа"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Отменить мой заказ"),
+		),
 	)
 
 	keyboard.OneTimeKeyboard = true
@@ -104,28 +108,22 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				return
 			}
 			session.State = STATE_ORDER_CREATED
+			session.Order = order
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
-			msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
-				tgbotapi.NewKeyboardButtonRow(
-					tgbotapi.NewKeyboardButton("Узнать статус моего заказа"),
-				),
-				tgbotapi.NewKeyboardButtonRow(
-					tgbotapi.NewKeyboardButton("Отменить мой заказ"),
-				),
-			)
+			msg.ReplyMarkup = orderKeyboard
 			bot.Send(msg)
 			return
 
 		case STATE_ORDER_CREATED:
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Машина скоро будет")
-			msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
-				tgbotapi.NewKeyboardButtonRow(
-					tgbotapi.NewKeyboardButton("Узнать статус моего заказа"),
-				),
-				tgbotapi.NewKeyboardButtonRow(
-					tgbotapi.NewKeyboardButton("Отменить мой заказ"),
-				),
-			)
+			if update.Message.Text == "Отменить мой заказ" {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Мы пока не умеем отменять заказ. Извините")
+				msg.ReplyMarkup = orderKeyboard
+				bot.Send(msg)
+				return
+			}
+
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Машина скоро будет. Статус вашего заказа: %v", session.Order.Status))
+			msg.ReplyMarkup = orderKeyboard
 			bot.Send(msg)
 			return
 
