@@ -66,9 +66,6 @@ func main() {
 func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	keyboard := getBasicKeyboard()
 	orderKeyboard := getOrderKeyboard()
-	fareKeyboard := getFaresKeyboard()
-
-	keyboard.OneTimeKeyboard = true
 
 	if session := sessions[update.Message.Chat.ID]; session != nil {
 		switch session.State {
@@ -82,7 +79,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session.Phone = update.Message.Text
 			session.State = STATE_NEED_FARE
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите тариф")
-			msg.ReplyMarkup = fareKeyboard
+			msg.ReplyMarkup = getFaresKeyboard()
 			bot.Send(msg)
 			return
 
@@ -110,7 +107,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session.State = STATE_ORDER_CREATED
 			session.Order = order
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
-			msg.ReplyMarkup = orderKeyboard
+			msg.ReplyMarkup = getOrderKeyboard()
 			bot.Send(msg)
 			return
 
@@ -161,7 +158,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 }
 
 func getBasicKeyboard() tgbotapi.ReplyKeyboardMarkup {
-	return tgbotapi.NewReplyKeyboard(
+	keyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Быстрый заказ такси"),
 		),
@@ -169,10 +166,12 @@ func getBasicKeyboard() tgbotapi.ReplyKeyboardMarkup {
 			tgbotapi.NewKeyboardButton("Тарифы"),
 		),
 	)
+	keyboard.OneTimeKeyboard = true
+	return keyboard
 }
 
 func getOrderKeyboard() tgbotapi.ReplyKeyboardMarkup {
-	return tgbotapi.NewReplyKeyboard(
+	keyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Узнать статус моего заказа"),
 		),
@@ -180,15 +179,23 @@ func getOrderKeyboard() tgbotapi.ReplyKeyboardMarkup {
 			tgbotapi.NewKeyboardButton("Отменить мой заказ"),
 		),
 	)
+	keyboard.OneTimeKeyboard = true
+	return keyboard
 }
 
 func getFaresKeyboard() tgbotapi.ReplyKeyboardMarkup {
-	return tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Стандарт"),
-		),
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Комфорт"),
-		),
-	)
+	fares, err := nambaTaxiApi.GetFares()
+	if err != nil {
+		log.Printf("error getting fares: %v", err)
+		return tgbotapi.NewReplyKeyboard()
+	}
+
+	var rows []tgbotapi.KeyboardButton
+	for _, fare := range fares.Fare {
+		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(fare.Name))...)
+	}
+
+	keyboard := tgbotapi.NewReplyKeyboard(rows)
+	keyboard.OneTimeKeyboard = true
+	return keyboard
 }
