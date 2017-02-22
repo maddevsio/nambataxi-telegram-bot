@@ -27,6 +27,7 @@ const (
 	FARE_STANDART       = "1"
 	STATE_NEED_PHONE    = "need phone"
 	STATE_NEED_ADDRESS  = "need address"
+	STATE_NEED_FARE     = "need fare"
 	STATE_ORDER_CREATED = "order created"
 )
 
@@ -81,6 +82,15 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		),
 	)
 
+	fareKeyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Стандарт"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Комфорт"),
+		),
+	)
+
 	keyboard.OneTimeKeyboard = true
 
 	if session := sessions[update.Message.Chat.ID]; session != nil {
@@ -93,8 +103,15 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				return
 			}
 			session.Phone = update.Message.Text
+			session.State = STATE_NEED_FARE
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите тариф")
+			msg.ReplyMarkup = fareKeyboard
+			bot.Send(msg)
+			return
+
+		case STATE_NEED_FARE: // пока что тариф для теста, используем стандарт
 			session.State = STATE_NEED_ADDRESS
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите адрес")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш адрес. Куда подать машину?")
 			bot.Send(msg)
 			return
 
