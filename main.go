@@ -7,6 +7,8 @@ import (
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
 	"fmt"
 	"strings"
+	"errors"
+	"strconv"
 )
 
 type Session struct {
@@ -24,7 +26,6 @@ var (
 )
 
 const (
-	FARE_STANDART       = "1"
 	STATE_NEED_PHONE    = "need phone"
 	STATE_NEED_ADDRESS  = "need address"
 	STATE_NEED_FARE     = "need fare"
@@ -83,7 +84,15 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			bot.Send(msg)
 			return
 
-		case STATE_NEED_FARE: // пока что тариф для теста, используем стандарт
+		case STATE_NEED_FARE:
+			fareId, err := getFareIdByName(update.Message.Text)
+			if (err != nil) {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка! Не удалось получить тариф по имени. Попробуйте еще раз")
+				msg.ReplyMarkup = keyboard
+				bot.Send(msg)
+				return
+			}
+			session.FareId = fareId
 			session.State = STATE_NEED_ADDRESS
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш адрес. Куда подать машину?")
 			bot.Send(msg)
@@ -94,7 +103,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			orderOptions := map[string][]string{
 				"phone_number": {session.Phone},
 				"address":      {session.Address},
-				"fare":         {FARE_STANDART},
+				"fare":         {strconv.Itoa(session.FareId)},
 			}
 
 			order, err := nambaTaxiApi.MakeOrder(orderOptions)
@@ -113,7 +122,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 		case STATE_ORDER_CREATED:
 			if update.Message.Text == "Отменить мой заказ" {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Мы пока не умеем отменять заказ. Извините")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Мы пока не умеем отменять заказ. Извините.")
 				msg.ReplyMarkup = orderKeyboard
 				bot.Send(msg)
 				return
@@ -206,4 +215,18 @@ func getFaresKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	keyboard := tgbotapi.NewReplyKeyboard(rows)
 	keyboard.OneTimeKeyboard = true
 	return keyboard
+}
+
+func getFareIdByName(fareName string) (int, error) {
+	fares, err := nambaTaxiApi.GetFares()
+	if err != nil {
+		log.Printf("error getting fares: %v", err)
+		return 0, err
+	}
+	for _, fare := range fares.Fare {
+		if fare.Name == fareName {
+			return fare.Id, nil
+		}
+	}
+	return 0, errors.New(fmt.Sprintf("Cannot find fare with name %v", fareName))
 }
