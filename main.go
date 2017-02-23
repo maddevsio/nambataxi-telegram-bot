@@ -150,6 +150,14 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		return
 	}
 
+	if update.Message.Text == "Узнать статус моего заказа" {
+		delete(sessions, update.Message.Chat.ID)
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "К сожалению у вас нет заказа")
+		msg.ReplyMarkup = keyboard
+		bot.Send(msg)
+		return
+	}
+
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Что-что?")
 	msg.ReplyToMessageID = update.Message.MessageID
 	msg.ReplyMarkup = keyboard
