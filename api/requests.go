@@ -111,6 +111,15 @@ func (api *NambaTaxiApi) GetOrder(id int) (Order, error) {
 	return structure, nil
 }
 
+//func (api *NambaTaxiApi) CancelOrder(id int) (error) {
+//	structure := Order{}
+//	err := api.makePostRequestAndMapStructure(&structure, "cancel_order/"+strconv.Itoa(id), make(map[string][]string))
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}
+
 func (api *NambaTaxiApi) makePostRequestAndMapStructure(structure interface{}, uri string, postParams map[string][]string) (error) {
 	jsonData, err := api.makePostRequest(uri, postParams)
 	if err != nil {
