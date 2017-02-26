@@ -101,7 +101,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				return
 			}
 			session.State = chat.STATE_ORDER_CREATED
-			session.Order = order
+			session.OrderId = order.OrderId
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
 			msg.ReplyMarkup = getOrderKeyboard()
 			bot.Send(msg)
@@ -115,7 +115,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				return
 			}
 
-			order, err := nambaTaxiApi.GetOrder(session.Order.OrderId)
+			order, err := nambaTaxiApi.GetOrder(session.OrderId)
 			if err != nil {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения заказа: %v", err))
 				msg.ReplyMarkup = orderKeyboard
