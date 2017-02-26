@@ -5,23 +5,16 @@ import (
 	"gopkg.in/telegram-bot-api.v4"
 	"github.com/maddevsio/simple-config"
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
+	"github.com/maddevsio/nambataxi-telegram-bot/chat"
 	"fmt"
 	"strings"
 	"errors"
 	"strconv"
 )
 
-type Session struct {
-	Phone string
-	Address string
-	FareId int
-	State string
-	Order api.Order
-}
-
 var (
 	config = simple_config.NewSimpleConfig("config", "yml")
-	sessions = make(map[int64]*Session)
+	sessions = make(map[int64]*chat.Session)
 	nambaTaxiApi api.NambaTaxiApi
 )
 
@@ -152,7 +145,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	}
 
 	if update.Message.Text == "Быстрый заказ такси" {
-		sessions[update.Message.Chat.ID] = &Session{}
+		sessions[update.Message.Chat.ID] = &chat.Session{}
 		sessions[update.Message.Chat.ID].State = STATE_NEED_PHONE
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш телефон. Например: +996555112233")
 		bot.Send(msg)
