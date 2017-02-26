@@ -14,7 +14,7 @@ import (
 
 var (
 	config = simple_config.NewSimpleConfig("config", "yml")
-	sessions = make(map[int64]*chat.Session)
+	sessions = chat.GetAllSessions()
 	nambaTaxiApi api.NambaTaxiApi
 )
 
@@ -54,6 +54,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	keyboard := getBasicKeyboard()
 	orderKeyboard := getOrderKeyboard()
 
+	// TODO: we do not need to use all sessions here, need to change this code to sqlite quering
 	if session := sessions[update.Message.Chat.ID]; session != nil {
 		switch session.State {
 

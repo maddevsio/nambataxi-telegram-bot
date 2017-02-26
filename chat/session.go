@@ -16,3 +16,8 @@ const (
 	STATE_NEED_FARE     = "need fare"
 	STATE_ORDER_CREATED = "order created"
 )
+
+func GetAllSessions() map[int64]*Session{
+	return make(map[int64]*Session)
+	// TODO need to get this data from SQLite3 via GORM
+}
