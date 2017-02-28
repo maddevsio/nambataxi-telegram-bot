@@ -1,6 +1,9 @@
 package chat
 
+import "github.com/jinzhu/gorm"
+
 type Session struct {
+	gorm.Model
 	Phone string
 	Address string
 	FareId int
