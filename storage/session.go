@@ -23,3 +23,9 @@ func GetAllSessions() map[int64]*Session{
 	return make(map[int64]*Session)
 	// TODO need to get this data from SQLite3 via GORM
 }
+
+func GetSessionByChatID(db *gorm.DB, chatID int64) Session {
+	session := Session{}
+	db.First(&session, "chat_id = ?", chatID)
+	return session
+}
