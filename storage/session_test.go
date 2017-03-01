@@ -1,30 +1,29 @@
-package chat
+package storage
 
 import (
 	"testing"
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/assert"
+	"github.com/jinzhu/gorm"
 )
 
-func TestStoreSession(t *testing.T) {
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	defer db.Close()
+func initDB() *gorm.DB {
+	db := GetGormDB()
+	MigrateAll(db)
+	return db
+}
 
-	// Migrate the schema
-	db.AutoMigrate(&Session{})
+func TestStoreSession(t *testing.T) {
+	db := initDB()
 
 	session1 := Session{}
+	session1.ChatID = 1
 	session1.OrderId = 1
 	session1.FareId = 1
 	session1.Address = "address"
 	session1.Phone = "123"
 	session1.State = "state"
 
-	// Create
 	db.Create(&session1)
 
 	session2 := Session{}

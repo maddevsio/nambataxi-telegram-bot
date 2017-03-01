@@ -5,17 +5,18 @@ import (
 	"gopkg.in/telegram-bot-api.v4"
 	"github.com/maddevsio/simple-config"
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
-	"github.com/maddevsio/nambataxi-telegram-bot/chat"
 	"fmt"
 	"strings"
 	"errors"
 	"strconv"
+	"github.com/maddevsio/nambataxi-telegram-bot/storage"
 )
 
 var (
 	config = simple_config.NewSimpleConfig("config", "yml")
-	sessions = chat.GetAllSessions()
+	sessions = storage.GetAllSessions()
 	nambaTaxiApi api.NambaTaxiApi
+	//db = storage.GetGormDB()
 )
 
 func main() {
@@ -58,20 +59,20 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	if session := sessions[update.Message.Chat.ID]; session != nil {
 		switch session.State {
 
-		case chat.STATE_NEED_PHONE:
+		case storage.STATE_NEED_PHONE:
 			if !strings.HasPrefix(update.Message.Text, "+996") {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон должен начинаться с +996")
 				bot.Send(msg)
 				return
 			}
 			session.Phone = update.Message.Text
-			session.State = chat.STATE_NEED_FARE
+			session.State = storage.STATE_NEED_FARE
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите тариф")
 			msg.ReplyMarkup = getFaresKeyboard()
 			bot.Send(msg)
 			return
 
-		case chat.STATE_NEED_FARE:
+		case storage.STATE_NEED_FARE:
 			fareId, err := getFareIdByName(update.Message.Text)
 			if (err != nil) {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка! Не удалось получить тариф по имени. Попробуйте еще раз")
@@ -80,12 +81,12 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				return
 			}
 			session.FareId = fareId
-			session.State = chat.STATE_NEED_ADDRESS
+			session.State = storage.STATE_NEED_ADDRESS
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш адрес. Куда подать машину?")
 			bot.Send(msg)
 			return
 
-		case chat.STATE_NEED_ADDRESS:
+		case storage.STATE_NEED_ADDRESS:
 			session.Address = update.Message.Text
 			orderOptions := map[string][]string{
 				"phone_number": {session.Phone},
@@ -100,14 +101,14 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				bot.Send(msg)
 				return
 			}
-			session.State = chat.STATE_ORDER_CREATED
+			session.State = storage.STATE_ORDER_CREATED
 			session.OrderId = order.OrderId
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
 			msg.ReplyMarkup = getOrderKeyboard()
 			bot.Send(msg)
 			return
 
-		case chat.STATE_ORDER_CREATED:
+		case storage.STATE_ORDER_CREATED:
 			if update.Message.Text == "Отменить мой заказ" {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Мы пока не умеем отменять заказ. Извините.")
 				msg.ReplyMarkup = orderKeyboard
@@ -139,8 +140,8 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	}
 
 	if update.Message.Text == "Быстрый заказ такси" {
-		sessions[update.Message.Chat.ID] = &chat.Session{}
-		sessions[update.Message.Chat.ID].State = chat.STATE_NEED_PHONE
+		sessions[update.Message.Chat.ID] = &storage.Session{}
+		sessions[update.Message.Chat.ID].State = storage.STATE_NEED_PHONE
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш телефон. Например: +996555112233")
 		bot.Send(msg)
 		return
@@ -153,6 +154,14 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		bot.Send(msg)
 		return
 	}
+
+	if update.Message.Text == "/start" {
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вас приветствует бот Намба Такси для мессенджера Телеграм")
+		msg.ReplyMarkup = keyboard
+		bot.Send(msg)
+		return
+	}
+
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Что-что?")
 	msg.ReplyToMessageID = update.Message.MessageID
