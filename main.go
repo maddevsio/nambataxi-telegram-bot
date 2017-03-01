@@ -16,10 +16,12 @@ var (
 	config = simple_config.NewSimpleConfig("config", "yml")
 	sessions = storage.GetAllSessions()
 	nambaTaxiApi api.NambaTaxiApi
-	//db = storage.GetGormDB()
+	db = storage.GetGormDB("namba-taxi-bot.db")
 )
 
 func main() {
+	storage.MigrateAll(db)
+
 	nambaTaxiApi = api.NewNambaTaxiApi(
 		config.GetString("partner_id"),
 		config.GetString("server_token"),
@@ -138,6 +140,8 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			return
 		}
 	}
+
+	// messages reactions while out of session scope
 
 	if update.Message.Text == "Быстрый заказ такси" {
 		sessions[update.Message.Chat.ID] = &storage.Session{}
