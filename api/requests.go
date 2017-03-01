@@ -62,6 +62,11 @@ type Order struct {
 	} `json:"driver"`
 }
 
+type Cancel struct {
+	Status string `json:"status"`
+	Message string `json:"message"`
+}
+
 func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
 	return NambaTaxiApi{partnerID, serverToken, url, version}
 }
@@ -111,14 +116,14 @@ func (api *NambaTaxiApi) GetOrder(id int) (Order, error) {
 	return structure, nil
 }
 
-//func (api *NambaTaxiApi) CancelOrder(id int) (error) {
-//	structure := Order{}
-//	err := api.makePostRequestAndMapStructure(&structure, "cancel_order/"+strconv.Itoa(id), make(map[string][]string))
-//	if err != nil {
-//		return err
-//	}
-//	return nil
-//}
+func (api *NambaTaxiApi) CancelOrder(id int) (Cancel, error) {
+	structure := Cancel{}
+	err := api.makePostRequestAndMapStructure(&structure, "cancel_order/"+strconv.Itoa(id), make(map[string][]string))
+	if err != nil {
+		return Cancel{}, err
+	}
+	return structure, nil
+}
 
 func (api *NambaTaxiApi) makePostRequestAndMapStructure(structure interface{}, uri string, postParams map[string][]string) (error) {
 	jsonData, err := api.makePostRequest(uri, postParams)
