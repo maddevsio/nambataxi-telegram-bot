@@ -40,7 +40,7 @@ func TestStoreAndGetSession(t *testing.T) {
 	deleteDB()
 }
 
-func TestGetSessionByChatIDAndUpdate(t *testing.T) {
+func TestGetSessionByChatID_AndUpdate(t *testing.T) {
 	db := initDB()
 	session1 := getSession()
 	db.Create(&session1)
@@ -51,5 +51,12 @@ func TestGetSessionByChatIDAndUpdate(t *testing.T) {
 
 	session3 := GetSessionByChatID(db, 1)
 	assert.Equal(t, "456", session3.Phone)
+	deleteDB()
+}
+
+func TestGetSessionByChatID_DoesNotExist(t *testing.T) {
+	db := initDB()
+	session := GetSessionByChatID(db, 1)
+	assert.Equal(t, Session{}, session)
 	deleteDB()
 }
