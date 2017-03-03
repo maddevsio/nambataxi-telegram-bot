@@ -61,6 +61,9 @@ func TestMakeOrder_GetOrder_DeleteOrder(t *testing.T) {
 	assert.Equal(t, order1.OrderId, order2.OrderId)
 	assert.Equal(t, "Новый заказ", order2.Status)
 
-	cancel, err := api.CancelOrder(order1.OrderId)
-	assert.Equal(t, "200", cancel.Status)
+	cancel1, err := api.CancelOrder(order1.OrderId)
+	assert.Equal(t, "200", cancel1.Status)
+
+	cancel2, err := api.CancelOrder(order2.OrderId)
+	assert.Equal(t, "400", cancel2.Status)
 }
