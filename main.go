@@ -54,7 +54,7 @@ func main() {
 }
 
 func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
-	keyboard := getBasicKeyboard()
+	basicKeyboard := getBasicKeyboard()
 	orderKeyboard := getOrderKeyboard()
 
 
@@ -79,7 +79,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			fareId, err := getFareIdByName(update.Message.Text)
 			if (err != nil) {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка! Не удалось получить тариф по имени. Попробуйте еще раз")
-				msg.ReplyMarkup = keyboard
+				msg.ReplyMarkup = basicKeyboard
 				bot.Send(msg)
 				return
 			}
@@ -113,8 +113,26 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 		case storage.STATE_ORDER_CREATED:
 			if update.Message.Text == "Отменить мой заказ" {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Мы пока не умеем отменять заказ. Извините.")
-				msg.ReplyMarkup = orderKeyboard
+				var message string
+				var keyboard = orderKeyboard
+
+				cancel, err := nambaTaxiApi.CancelOrder(session.OrderId)
+				if err != nil {
+					message = "Произошла системная ошибка. Попробуйте еще раз"
+					log.Printf("Error canceling order %v", err)
+				}
+
+				if cancel.Status == "200" {
+					message = "Ваш заказ отменен"
+					keyboard = basicKeyboard
+					delete(sessions, update.Message.Chat.ID)
+				}
+				if cancel.Status == "400" {
+					message = "Ваш заказ уже нельзя отменить, он передан водителю"
+				}
+
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, message)
+				msg.ReplyMarkup = keyboard
 				bot.Send(msg)
 				return
 			}
@@ -136,7 +154,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			delete(sessions, update.Message.Chat.ID)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Заказ не открыт. Откройте заново")
 			msg.ReplyToMessageID = update.Message.MessageID
-			msg.ReplyMarkup = keyboard
+			msg.ReplyMarkup = basicKeyboard
 			bot.Send(msg)
 			return
 		}
@@ -155,14 +173,14 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	if update.Message.Text == "Узнать статус моего заказа" {
 		delete(sessions, update.Message.Chat.ID)
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "К сожалению у вас нет заказа")
-		msg.ReplyMarkup = keyboard
+		msg.ReplyMarkup = basicKeyboard
 		bot.Send(msg)
 		return
 	}
 
 	if update.Message.Text == "/start" {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вас приветствует бот Намба Такси для мессенджера Телеграм")
-		msg.ReplyMarkup = keyboard
+		msg.ReplyMarkup = basicKeyboard
 		bot.Send(msg)
 		return
 	}
@@ -170,7 +188,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Что-что?")
 	msg.ReplyToMessageID = update.Message.MessageID
-	msg.ReplyMarkup = keyboard
+	msg.ReplyMarkup = basicKeyboard
 	bot.Send(msg)
 	return
 }
