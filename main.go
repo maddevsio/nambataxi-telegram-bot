@@ -7,9 +7,9 @@ import (
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
 	"fmt"
 	"strings"
-	"errors"
 	"strconv"
 	"github.com/maddevsio/nambataxi-telegram-bot/storage"
+	"github.com/maddevsio/nambataxi-telegram-bot/chat"
 )
 
 var (
@@ -28,6 +28,8 @@ func main() {
 		config.GetString("url"),
 		config.GetString("version"),
 	)
+
+	chat.NambaTaxiApi = nambaTaxiApi //init this for keyboards
 
 	bot, err := tgbotapi.NewBotAPI(config.GetString("bot_token"))
 	if err != nil {
@@ -54,8 +56,8 @@ func main() {
 }
 
 func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
-	basicKeyboard := getBasicKeyboard()
-	orderKeyboard := getOrderKeyboard()
+	basicKeyboard := chat.GetBasicKeyboard()
+	orderKeyboard := chat.GetOrderKeyboard()
 
 
 	// TODO: we do not need to use all sessions here, need to change this code to sqlite quering
@@ -71,12 +73,12 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session.Phone = update.Message.Text
 			session.State = storage.STATE_NEED_FARE
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите тариф")
-			msg.ReplyMarkup = getFaresKeyboard()
+			msg.ReplyMarkup = chat.GetFaresKeyboard()
 			bot.Send(msg)
 			return
 
 		case storage.STATE_NEED_FARE:
-			fareId, err := getFareIdByName(update.Message.Text)
+			fareId, err := chat.GetFareIdByName(update.Message.Text)
 			if (err != nil) {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка! Не удалось получить тариф по имени. Попробуйте еще раз")
 				msg.ReplyMarkup = basicKeyboard
@@ -107,7 +109,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session.State = storage.STATE_ORDER_CREATED
 			session.OrderId = order.OrderId
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
-			msg.ReplyMarkup = getOrderKeyboard()
+			msg.ReplyMarkup = chat.GetOrderKeyboard()
 			bot.Send(msg)
 			return
 
@@ -191,61 +193,4 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	msg.ReplyMarkup = basicKeyboard
 	bot.Send(msg)
 	return
-}
-
-func getBasicKeyboard() tgbotapi.ReplyKeyboardMarkup {
-	keyboard := tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Быстрый заказ такси"),
-		),
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Тарифы"),
-		),
-	)
-	keyboard.OneTimeKeyboard = true
-	return keyboard
-}
-
-func getOrderKeyboard() tgbotapi.ReplyKeyboardMarkup {
-	keyboard := tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Узнать статус моего заказа"),
-		),
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Отменить мой заказ"),
-		),
-	)
-	keyboard.OneTimeKeyboard = true
-	return keyboard
-}
-
-func getFaresKeyboard() tgbotapi.ReplyKeyboardMarkup {
-	fares, err := nambaTaxiApi.GetFares()
-	if err != nil {
-		log.Printf("error getting fares: %v", err)
-		return tgbotapi.NewReplyKeyboard()
-	}
-
-	var rows []tgbotapi.KeyboardButton
-	for _, fare := range fares.Fare {
-		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(fare.Name))...)
-	}
-
-	keyboard := tgbotapi.NewReplyKeyboard(rows)
-	keyboard.OneTimeKeyboard = true
-	return keyboard
-}
-
-func getFareIdByName(fareName string) (int, error) {
-	fares, err := nambaTaxiApi.GetFares()
-	if err != nil {
-		log.Printf("error getting fares: %v", err)
-		return 0, err
-	}
-	for _, fare := range fares.Fare {
-		if fare.Name == fareName {
-			return fare.Id, nil
-		}
-	}
-	return 0, errors.New(fmt.Sprintf("Cannot find fare with name %v", fareName))
 }
