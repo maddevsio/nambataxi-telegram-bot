@@ -1,22 +1,23 @@
 package main
 
 import (
-	"log"
-	"gopkg.in/telegram-bot-api.v4"
-	"github.com/maddevsio/simple-config"
-	"github.com/maddevsio/nambataxi-telegram-bot/api"
 	"fmt"
-	"strings"
+	"log"
 	"strconv"
-	"github.com/maddevsio/nambataxi-telegram-bot/storage"
+	"strings"
+
+	"github.com/maddevsio/nambataxi-telegram-bot/api"
 	"github.com/maddevsio/nambataxi-telegram-bot/chat"
+	"github.com/maddevsio/nambataxi-telegram-bot/storage"
+	"github.com/maddevsio/simple-config"
+	"gopkg.in/telegram-bot-api.v4"
 )
 
 var (
-	config = simple_config.NewSimpleConfig("config", "yml")
-	sessions = storage.GetAllSessions()
+	config       = simple_config.NewSimpleConfig("config", "yml")
+	sessions     = storage.GetAllSessions()
 	nambaTaxiApi api.NambaTaxiApi
-	db = storage.GetGormDB("namba-taxi-bot.db")
+	db           = storage.GetGormDB("namba-taxi-bot.db")
 )
 
 func main() {
@@ -33,7 +34,7 @@ func main() {
 
 	bot, err := tgbotapi.NewBotAPI(config.GetString("bot_token"))
 	if err != nil {
-		log.Panic(err)
+		log.Panicf("Error connecting to Telegram: %v", err)
 	}
 
 	bot.Debug = true
@@ -55,10 +56,9 @@ func main() {
 	}
 }
 
-func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
+func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	basicKeyboard := chat.GetBasicKeyboard()
 	orderKeyboard := chat.GetOrderKeyboard()
-
 
 	// TODO: we do not need to use all sessions here, need to change this code to sqlite quering
 	if session := sessions[update.Message.Chat.ID]; session != nil {
@@ -79,7 +79,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 		case storage.STATE_NEED_FARE:
 			fareId, err := chat.GetFareIdByName(update.Message.Text)
-			if (err != nil) {
+			if err != nil {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка! Не удалось получить тариф по имени. Попробуйте еще раз")
 				msg.ReplyMarkup = basicKeyboard
 				bot.Send(msg)

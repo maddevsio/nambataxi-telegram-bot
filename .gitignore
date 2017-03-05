@@ -1,3 +1,5 @@
 .idea/
 config.yaml
 namba-taxi-bot.db
+.DS_Store
+nambataxi-telegram-bot
