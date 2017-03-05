@@ -176,6 +176,7 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		fares, err := nambaTaxiApi.GetFares()
 		if err != nil {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка. Не удалось получить тарифы. Попробуйте еще раз")
+			msg.ReplyMarkup = basicKeyboard
 			bot.Send(msg)
 			return
 		}
@@ -185,7 +186,10 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			faresText = faresText + fare.Name + "\n"
 		}
 
+		faresText = faresText + "\nДля получения подробной информации посетите https://nambataxi.kg/ru/tariffs/"
+
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, faresText)
+		msg.ReplyMarkup = basicKeyboard
 		bot.Send(msg)
 		return
 	}
