@@ -183,10 +183,14 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 		var faresText string
 		for _, fare := range fares.Fare {
-			faresText = faresText + fare.Name + "\n"
+			faresText = faresText + fmt.Sprintf("Тариф: %v. Стоимость посадки: %.2f. Стоимость за километр: %.2f.\n\n",
+				fare.Name,
+				fare.Flagfall,
+				fare.Cost_per_kilometer,
+			)
 		}
 
-		faresText = faresText + "\nДля получения подробной информации посетите https://nambataxi.kg/ru/tariffs/"
+		faresText = faresText + "Для получения подробной информации посетите https://nambataxi.kg/ru/tariffs/"
 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, faresText)
 		msg.ReplyMarkup = basicKeyboard
