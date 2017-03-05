@@ -172,6 +172,24 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		return
 	}
 
+	if update.Message.Text == "Тарифы" {
+		fares, err := nambaTaxiApi.GetFares()
+		if err != nil {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка. Не удалось получить тарифы. Попробуйте еще раз")
+			bot.Send(msg)
+			return
+		}
+
+		var faresText string
+		for _, fare := range fares.Fare {
+			faresText = faresText + fare.Name + "\n"
+		}
+
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, faresText)
+		bot.Send(msg)
+		return
+	}
+
 	if update.Message.Text == "Узнать статус моего заказа" {
 		delete(sessions, update.Message.Chat.ID)
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "К сожалению у вас нет заказа")
@@ -186,7 +204,6 @@ func chatStateMachine (update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		bot.Send(msg)
 		return
 	}
-
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Что-что?")
 	msg.ReplyToMessageID = update.Message.MessageID
