@@ -3,21 +3,9 @@ package storage
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/jinzhu/gorm"
-	"os"
 )
 
 const TEST_DB_NAME = "test.db"
-
-func initDB() *gorm.DB {
-	db := GetGormDB(TEST_DB_NAME)
-	MigrateAll(db)
-	return db
-}
-
-func deleteDB() {
-	os.Remove(TEST_DB_NAME)
-}
 
 func getSession() Session {
 	session := Session{}

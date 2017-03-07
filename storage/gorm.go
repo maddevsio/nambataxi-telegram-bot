@@ -16,4 +16,5 @@ func GetGormDB(dbName string) *gorm.DB {
 
 func MigrateAll(db *gorm.DB ) {
 	db.AutoMigrate(&Session{})
+	db.AutoMigrate(&Address{})
 }
