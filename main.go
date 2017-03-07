@@ -90,6 +90,10 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session.State = storage.STATE_NEED_ADDRESS
 			db.Save(&session)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш адрес. Куда подать машину?")
+			addresses := storage.GetLastAddressByChatID(db, session.ChatID)
+			if len(addresses) > 0 {
+				msg.ReplyMarkup = chat.GetAddressKeyboard(addresses)
+			}
 			bot.Send(msg)
 			return
 
@@ -111,6 +115,10 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session.State = storage.STATE_ORDER_CREATED
 			session.OrderId = order.OrderId
 			db.Save(&session)
+			address := storage.Address{}
+			address.ChatID = session.ChatID
+			address.Text = session.Address
+			db.Save(&address)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
 			msg.ReplyMarkup = chat.GetOrderKeyboard()
 			bot.Send(msg)

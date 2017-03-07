@@ -6,6 +6,7 @@ import (
 	"log"
 	"errors"
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
+	"github.com/maddevsio/nambataxi-telegram-bot/storage"
 )
 
 var NambaTaxiApi api.NambaTaxiApi
@@ -43,12 +44,22 @@ func GetFaresKeyboard() tgbotapi.ReplyKeyboardMarkup {
 		return tgbotapi.NewReplyKeyboard()
 	}
 
-	var rows []tgbotapi.KeyboardButton
+	var rows [][]tgbotapi.KeyboardButton
 	for _, fare := range fares.Fare {
-		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(fare.Name))...)
+		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(fare.Name)))
 	}
 
-	keyboard := tgbotapi.NewReplyKeyboard(rows)
+	keyboard := tgbotapi.NewReplyKeyboard(rows...)
+	keyboard.OneTimeKeyboard = true
+	return keyboard
+}
+
+func GetAddressKeyboard(addresses []storage.Address) tgbotapi.ReplyKeyboardMarkup {
+	var rows [][]tgbotapi.KeyboardButton
+	for _, address := range addresses {
+		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(address.Text)))
+	}
+	keyboard := tgbotapi.NewReplyKeyboard(rows...)
 	keyboard.OneTimeKeyboard = true
 	return keyboard
 }
