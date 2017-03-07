@@ -73,6 +73,7 @@ func TestGetSessionByChatID_Delete(t *testing.T) {
 	db.Delete(session2)
 
 	session3 := GetSessionByChatID(db, 1)
+	assert.Equal(t, int64(0), session3.ChatID)
 	assert.Equal(t, Session{}, session3)
 
 	deleteDB()
@@ -86,3 +87,4 @@ func TestGetSessionByChatID_DeleteNonExistentSession(t *testing.T) {
 
 	deleteDB()
 }
+

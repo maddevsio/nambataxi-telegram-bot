@@ -59,9 +59,9 @@ func main() {
 func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	basicKeyboard := chat.GetBasicKeyboard()
 	orderKeyboard := chat.GetOrderKeyboard()
+	session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
 
-	// TODO: we do not need to use all sessions here, need to change this code to sqlite quering
-	if session := sessions[update.Message.Chat.ID]; session != nil {
+	if session.ChatID != int64(0) {
 		switch session.State {
 
 		case storage.STATE_NEED_PHONE:
@@ -72,6 +72,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			}
 			session.Phone = update.Message.Text
 			session.State = storage.STATE_NEED_FARE
+			db.Save(&session)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите тариф")
 			msg.ReplyMarkup = chat.GetFaresKeyboard()
 			bot.Send(msg)
@@ -87,6 +88,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			}
 			session.FareId = fareId
 			session.State = storage.STATE_NEED_ADDRESS
+			db.Save(&session)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш адрес. Куда подать машину?")
 			bot.Send(msg)
 			return
@@ -108,6 +110,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			}
 			session.State = storage.STATE_ORDER_CREATED
 			session.OrderId = order.OrderId
+			db.Save(&session)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
 			msg.ReplyMarkup = chat.GetOrderKeyboard()
 			bot.Send(msg)
@@ -127,7 +130,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				if cancel.Status == "200" {
 					message = "Ваш заказ отменен"
 					keyboard = basicKeyboard
-					delete(sessions, update.Message.Chat.ID)
+					db.Delete(&session)
 				}
 				if cancel.Status == "400" {
 					message = "Ваш заказ уже нельзя отменить, он передан водителю"
@@ -153,7 +156,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			}
 
 		default:
-			delete(sessions, update.Message.Chat.ID)
+			db.Delete(&session)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Заказ не открыт. Откройте заново")
 			msg.ReplyToMessageID = update.Message.MessageID
 			msg.ReplyMarkup = basicKeyboard
@@ -165,8 +168,10 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	// messages reactions while out of session scope
 
 	if update.Message.Text == "Быстрый заказ такси" {
-		sessions[update.Message.Chat.ID] = &storage.Session{}
-		sessions[update.Message.Chat.ID].State = storage.STATE_NEED_PHONE
+		session := &storage.Session{}
+		session.ChatID = update.Message.Chat.ID
+		session.State = storage.STATE_NEED_PHONE
+		db.Create(&session)
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш телефон. Например: +996555112233")
 		bot.Send(msg)
 		return
@@ -199,7 +204,8 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	}
 
 	if update.Message.Text == "Узнать статус моего заказа" {
-		delete(sessions, update.Message.Chat.ID)
+		session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
+		db.Delete(&session)
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "К сожалению у вас нет заказа")
 		msg.ReplyMarkup = basicKeyboard
 		bot.Send(msg)
