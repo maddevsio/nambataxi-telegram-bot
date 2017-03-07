@@ -47,7 +47,7 @@ func TestGetSessionByChatID_AndUpdate(t *testing.T) {
 
 	session2 := GetSessionByChatID(db, 1)
 	session2.Phone = "456"
-	db.Save(session2)
+	db.Save(&session2)
 
 	session3 := GetSessionByChatID(db, 1)
 	assert.Equal(t, "456", session3.Phone)
@@ -58,5 +58,31 @@ func TestGetSessionByChatID_DoesNotExist(t *testing.T) {
 	db := initDB()
 	session := GetSessionByChatID(db, 1)
 	assert.Equal(t, Session{}, session)
+	deleteDB()
+}
+
+func TestGetSessionByChatID_Delete(t *testing.T) {
+	db := initDB()
+
+	session1 := getSession()
+	db.Create(&session1)
+
+	session2 := GetSessionByChatID(db, 1)
+	assert.Equal(t, "123", session2.Phone)
+
+	db.Delete(session2)
+
+	session3 := GetSessionByChatID(db, 1)
+	assert.Equal(t, Session{}, session3)
+
+	deleteDB()
+}
+
+func TestGetSessionByChatID_DeleteNonExistentSession(t *testing.T) {
+	db := initDB()
+
+	session := GetSessionByChatID(db, 100)
+	db.Delete(session)
+
 	deleteDB()
 }
