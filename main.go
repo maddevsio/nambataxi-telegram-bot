@@ -115,10 +115,17 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session.State = storage.STATE_ORDER_CREATED
 			session.OrderId = order.OrderId
 			db.Save(&session)
+
 			address := storage.Address{}
 			address.ChatID = session.ChatID
 			address.Text = session.Address
-			db.Save(&address)
+			db.FirstOrCreate(&address, storage.Address{ChatID: address.ChatID, Text: address.Text})
+
+			phone := storage.Phone{}
+			phone.ChatID = session.ChatID
+			phone.Text = session.Phone
+			db.FirstOrCreate(&phone, storage.Phone{ChatID: phone.ChatID, Text: phone.Text})
+
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
 			msg.ReplyMarkup = chat.GetOrderKeyboard()
 			bot.Send(msg)
@@ -181,6 +188,10 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		session.State = storage.STATE_NEED_PHONE
 		db.Create(&session)
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш телефон. Например: +996555112233")
+		phones := storage.GetLastPhonesByChatID(db, session.ChatID)
+		if len(phones) > 0 {
+			msg.ReplyMarkup = chat.GetPhonesKeyboard(phones)
+		}
 		bot.Send(msg)
 		return
 	}

@@ -64,6 +64,16 @@ func GetAddressKeyboard(addresses []storage.Address) tgbotapi.ReplyKeyboardMarku
 	return keyboard
 }
 
+func GetPhonesKeyboard(phones []storage.Phone) tgbotapi.ReplyKeyboardMarkup {
+	var rows [][]tgbotapi.KeyboardButton
+	for _, phone := range phones {
+		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(phone.Text)))
+	}
+	keyboard := tgbotapi.NewReplyKeyboard(rows...)
+	keyboard.OneTimeKeyboard = true
+	return keyboard
+}
+
 func GetFareIdByName(fareName string) (int, error) {
 	fares, err := NambaTaxiApi.GetFares()
 	if err != nil {
