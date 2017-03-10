@@ -11,6 +11,7 @@ import (
 	"github.com/maddevsio/nambataxi-telegram-bot/storage"
 	"github.com/maddevsio/simple-config"
 	"gopkg.in/telegram-bot-api.v4"
+	"time"
 )
 
 var (
@@ -125,6 +126,19 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			phone.ChatID = session.ChatID
 			phone.Text = session.Phone
 			db.FirstOrCreate(&phone, storage.Phone{ChatID: phone.ChatID, Text: phone.Text})
+
+			go func() {
+				for {
+					time.Sleep(5 * time.Second)
+					log.Printf("Session order id: %v", session.OrderId)
+					order, err := nambaTaxiApi.GetOrder(session.OrderId)
+					if err != nil {
+						log.Printf("Error getting order status %v", err)
+					} else {
+						log.Printf("Order status %v", order.Status)
+					}
+				}
+			}()
 
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
 			msg.ReplyMarkup = chat.GetOrderKeyboard()
