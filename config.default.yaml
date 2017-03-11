@@ -3,3 +3,4 @@ partner_id:
 server_token:
 url: https://partners.staging.swift.kg/api
 version: v1
+bot_debug: true

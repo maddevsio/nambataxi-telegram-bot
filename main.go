@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"strings"
 
+	"time"
+
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
 	"github.com/maddevsio/nambataxi-telegram-bot/chat"
 	"github.com/maddevsio/nambataxi-telegram-bot/storage"
 	"github.com/maddevsio/simple-config"
 	"gopkg.in/telegram-bot-api.v4"
-	"time"
 )
 
 var (
@@ -38,7 +39,7 @@ func main() {
 		log.Panicf("Error connecting to Telegram: %v", err)
 	}
 
-	bot.Debug = true
+	bot.Debug = config.Get("bot_debug").(bool)
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
@@ -204,9 +205,9 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				if order.Status == "Выполнен" {
 					db.Delete(&session)
 					msg = tgbotapi.NewMessage(update.Message.Chat.ID,
-						"Ваш заказ выполнен. Спасибо, что воспользовались услугами Намба Такси. Если вдруг что-то не так, то телефон Отдела Контроля Качества к вашим услугам:\n" +
-							"+996 (312) 97-90-60\n" +
-							"+996 (701) 97-67-03\n" +
+						"Ваш заказ выполнен. Спасибо, что воспользовались услугами Намба Такси. Если вдруг что-то не так, то телефон Отдела Контроля Качества к вашим услугам:\n"+
+							"+996 (312) 97-90-60\n"+
+							"+996 (701) 97-67-03\n"+
 							"+996 (550) 97-60-23",
 					)
 					msg.ReplyMarkup = basicKeyboard
