@@ -143,6 +143,9 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 					} else {
 						log.Printf("Order status %v", currentOrder.Status)
 					}
+					if currentOrder.Status == "Отклонен" {
+						return
+					}
 				}
 			}()
 
