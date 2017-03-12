@@ -16,23 +16,24 @@ import (
 )
 
 var (
-	config       = simple_config.NewSimpleConfig("config", "yml")
-	sessions     = storage.GetAllSessions()
-	nambaTaxiApi api.NambaTaxiApi
-	db           = storage.GetGormDB("namba-taxi-bot.db")
+	nambaTaxiAPI api.NambaTaxiApi
+
+	config   = simple_config.NewSimpleConfig("config", "yml")
+	sessions = storage.GetAllSessions()
+	db       = storage.GetGormDB("namba-taxi-bot.db")
 )
 
 func main() {
 	storage.MigrateAll(db)
 
-	nambaTaxiApi = api.NewNambaTaxiApi(
+	nambaTaxiAPI = api.NewNambaTaxiApi(
 		config.GetString("partner_id"),
 		config.GetString("server_token"),
 		config.GetString("url"),
 		config.GetString("version"),
 	)
 
-	chat.NambaTaxiApi = nambaTaxiApi //init this for keyboards
+	chat.NambaTaxiApi = nambaTaxiAPI //init this for keyboards
 
 	bot, err := tgbotapi.NewBotAPI(config.GetString("bot_token"))
 	if err != nil {
@@ -47,6 +48,10 @@ func main() {
 	u.Timeout = 60
 
 	updates, err := bot.GetUpdatesChan(u)
+
+	if err != nil {
+		log.Panicf("Error getting updates channel %v", err)
+	}
 
 	for update := range updates {
 		if update.Message == nil {
@@ -81,14 +86,14 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			return
 
 		case storage.STATE_NEED_FARE:
-			fareId, err := chat.GetFareIdByName(update.Message.Text)
+			fareID, err := chat.GetFareIdByName(update.Message.Text)
 			if err != nil {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка! Не удалось получить тариф по имени. Попробуйте еще раз")
 				msg.ReplyMarkup = basicKeyboard
 				bot.Send(msg)
 				return
 			}
-			session.FareId = fareId
+			session.FareId = fareID
 			session.State = storage.STATE_NEED_ADDRESS
 			db.Save(&session)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш адрес. Куда подать машину?")
@@ -107,7 +112,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				"fare":         {strconv.Itoa(session.FareId)},
 			}
 
-			order, err := nambaTaxiApi.MakeOrder(orderOptions)
+			order, err := nambaTaxiAPI.MakeOrder(orderOptions)
 			if err != nil {
 				delete(sessions, update.Message.Chat.ID)
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка создания заказа. Попробуйте еще раз")
@@ -132,11 +137,11 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				for {
 					time.Sleep(5 * time.Second)
 					log.Printf("Session order id: %v", session.OrderId)
-					order, err := nambaTaxiApi.GetOrder(session.OrderId)
+					currentOrder, err := nambaTaxiAPI.GetOrder(session.OrderId)
 					if err != nil {
 						log.Printf("Error getting order status %v", err)
 					} else {
-						log.Printf("Order status %v", order.Status)
+						log.Printf("Order status %v", currentOrder.Status)
 					}
 				}
 			}()
@@ -151,7 +156,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				var message string
 				var keyboard = orderKeyboard
 
-				cancel, err := nambaTaxiApi.CancelOrder(session.OrderId)
+				cancel, err := nambaTaxiAPI.CancelOrder(session.OrderId)
 				if err != nil {
 					message = "Произошла системная ошибка. Попробуйте еще раз"
 					log.Printf("Error canceling order %v", err)
@@ -172,54 +177,54 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 				return
 			}
 
-			order, err := nambaTaxiApi.GetOrder(session.OrderId)
+			order, err := nambaTaxiAPI.GetOrder(session.OrderId)
 			if err != nil {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения заказа: %v", err))
 				msg.ReplyMarkup = orderKeyboard
 				bot.Send(msg)
 				return
-			} else {
-				var msg tgbotapi.MessageConfig
+			}
 
-				if order.Status == "Новый заказ" {
-					msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprint("Спасибо за ваш заказ. Он находится в обработке. Мы нашли рядом с вами 3 свободных машины. Совсем скоро водитель возьмет ваш заказ"))
-					msg.ReplyMarkup = orderKeyboard
-					bot.Send(msg)
-					return
-				}
+			var msg tgbotapi.MessageConfig
 
-				if order.Status == "Принят" {
-					msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(
-						"Ура! Ваш заказ принят ближайшим водителем!\nНомер борта: %v\nВодитель: %v\nТелефон: %v\nГосномер: %v\nМарка машины: %v",
-						order.Driver.CabNumber,
-						order.Driver.Name,
-						order.Driver.PhoneNumber,
-						order.Driver.LicensePlate,
-						order.Driver.Make,
-					))
-					msg.ReplyMarkup = orderKeyboard
-					bot.Send(msg)
-					return
-				}
-
-				if order.Status == "Выполнен" {
-					db.Delete(&session)
-					msg = tgbotapi.NewMessage(update.Message.Chat.ID,
-						"Ваш заказ выполнен. Спасибо, что воспользовались услугами Намба Такси. Если вдруг что-то не так, то телефон Отдела Контроля Качества к вашим услугам:\n"+
-							"+996 (312) 97-90-60\n"+
-							"+996 (701) 97-67-03\n"+
-							"+996 (550) 97-60-23",
-					)
-					msg.ReplyMarkup = basicKeyboard
-					bot.Send(msg)
-					return
-				}
-
-				msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v", order.Status))
+			if order.Status == "Новый заказ" {
+				msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprint("Спасибо за ваш заказ. Он находится в обработке. Мы нашли рядом с вами 3 свободных машины. Совсем скоро водитель возьмет ваш заказ"))
 				msg.ReplyMarkup = orderKeyboard
 				bot.Send(msg)
 				return
 			}
+
+			if order.Status == "Принят" {
+				msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(
+					"Ура! Ваш заказ принят ближайшим водителем!\nНомер борта: %v\nВодитель: %v\nТелефон: %v\nГосномер: %v\nМарка машины: %v",
+					order.Driver.CabNumber,
+					order.Driver.Name,
+					order.Driver.PhoneNumber,
+					order.Driver.LicensePlate,
+					order.Driver.Make,
+				))
+				msg.ReplyMarkup = orderKeyboard
+				bot.Send(msg)
+				return
+			}
+
+			if order.Status == "Выполнен" {
+				db.Delete(&session)
+				msg = tgbotapi.NewMessage(update.Message.Chat.ID,
+					"Ваш заказ выполнен. Спасибо, что воспользовались услугами Намба Такси. Если вдруг что-то не так, то телефон Отдела Контроля Качества к вашим услугам:\n"+
+						"+996 (312) 97-90-60\n"+
+						"+996 (701) 97-67-03\n"+
+						"+996 (550) 97-60-23",
+				)
+				msg.ReplyMarkup = basicKeyboard
+				bot.Send(msg)
+				return
+			}
+
+			msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v", order.Status))
+			msg.ReplyMarkup = orderKeyboard
+			bot.Send(msg)
+			return
 
 		default:
 			db.Delete(&session)
@@ -248,7 +253,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	}
 
 	if update.Message.Text == "Тарифы" {
-		fares, err := nambaTaxiApi.GetFares()
+		fares, err := nambaTaxiAPI.GetFares()
 		if err != nil {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка. Не удалось получить тарифы. Попробуйте еще раз")
 			msg.ReplyMarkup = basicKeyboard
