@@ -134,6 +134,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			db.FirstOrCreate(&phone, storage.Phone{ChatID: phone.ChatID, Text: phone.Text})
 
 			go func() {
+				var status = "Новый заказ"
 				for {
 					time.Sleep(5 * time.Second)
 					log.Printf("Session order id: %v", session.OrderId)
@@ -143,6 +144,12 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 					} else {
 						log.Printf("Order status %v", currentOrder.Status)
 					}
+					if status != currentOrder.Status {
+						msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v", currentOrder.Status))
+						msg.ReplyMarkup = chat.GetOrderKeyboard()
+						bot.Send(msg)
+					}
+					status = currentOrder.Status
 					if currentOrder.Status == "Отклонен" {
 						return
 					}
