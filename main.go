@@ -145,7 +145,19 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 						log.Printf("Order status %v", currentOrder.Status)
 					}
 					if status != currentOrder.Status {
-						msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v", currentOrder.Status))
+						var msg tgbotapi.MessageConfig
+						if currentOrder.Status == "Принят" {
+							msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(
+								"Ура! Ваш заказ принят ближайшим водителем!\nНомер борта: %v\nВодитель: %v\nТелефон: %v\nГосномер: %v\nМарка машины: %v",
+								currentOrder.Driver.CabNumber,
+								currentOrder.Driver.Name,
+								currentOrder.Driver.PhoneNumber,
+								currentOrder.Driver.LicensePlate,
+								currentOrder.Driver.Make,
+							))
+						} else {
+							msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v", currentOrder.Status))
+						}
 						msg.ReplyMarkup = chat.GetOrderKeyboard()
 						bot.Send(msg)
 					}
