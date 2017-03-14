@@ -141,29 +141,15 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 					currentOrder, err := nambaTaxiAPI.GetOrder(session.OrderId)
 					if err != nil {
 						log.Printf("Error getting order status %v", err)
+						return
 					} else {
 						log.Printf("Order status %v", currentOrder.Status)
 					}
 					if status != currentOrder.Status {
-						var msg tgbotapi.MessageConfig
-						if currentOrder.Status == "Принят" {
-							msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(
-								"Ура! Ваш заказ принят ближайшим водителем!\nНомер борта: %v\nВодитель: %v\nТелефон: %v\nГосномер: %v\nМарка машины: %v",
-								currentOrder.Driver.CabNumber,
-								currentOrder.Driver.Name,
-								currentOrder.Driver.PhoneNumber,
-								currentOrder.Driver.LicensePlate,
-								currentOrder.Driver.Make,
-							))
-						} else {
-							msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v", currentOrder.Status))
-						}
-						msg.ReplyMarkup = chat.GetOrderKeyboard()
-						bot.Send(msg)
+						chat.OrderStatusReaction(currentOrder, update, bot, db, session)
 					}
 					status = currentOrder.Status
-					if currentOrder.Status == "Отклонен" {
-
+					if currentOrder.Status == "Отклонен" || currentOrder.Status == "Выполнен" {
 						return
 					}
 				}
