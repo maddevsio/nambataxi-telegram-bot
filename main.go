@@ -16,7 +16,6 @@ var (
 	nambaTaxiAPI api.NambaTaxiApi
 
 	config   = simple_config.NewSimpleConfig("config", "yml")
-	sessions = storage.GetAllSessions()
 	db       = storage.GetGormDB("namba-taxi-bot.db")
 )
 
@@ -71,6 +70,10 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		case storage.STATE_NEED_PHONE:
 			if !strings.HasPrefix(update.Message.Text, "+996") {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон должен начинаться с +996")
+				phones := storage.GetLastPhonesByChatID(db, session.ChatID)
+				if len(phones) > 0 {
+					msg.ReplyMarkup = chat.GetPhonesKeyboard(phones)
+				}
 				bot.Send(msg)
 				return
 			}
@@ -103,13 +106,13 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 		case storage.STATE_NEED_ADDRESS:
 			// TODO: need to pass a structure, not this old-school list of params
-			chat.HandleOrderCreate(nambaTaxiAPI, session, db, update, bot)
+			chat.HandleOrderCreate(nambaTaxiAPI, &session, db, update, bot)
 			chat.StartStatusReactionGoroutine(nambaTaxiAPI, update, bot, db, session)
 			return
 
 		case storage.STATE_ORDER_CREATED:
 			if update.Message.Text == "Отменить мой заказ" {
-				chat.HandleOrderCancel(nambaTaxiAPI, session, db, update, bot)
+				chat.HandleOrderCancel(nambaTaxiAPI, &session, db, update, bot)
 				return
 			}
 

@@ -10,7 +10,7 @@ import (
 	"fmt"
 )
 
-func HandleOrderCancel(nambaTaxiAPI api.NambaTaxiApi, session storage.Session, db *gorm.DB, update tgbotapi.Update, bot *tgbotapi.BotAPI) {
+func HandleOrderCancel(nambaTaxiAPI api.NambaTaxiApi, session *storage.Session, db *gorm.DB, update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	var message string
 	var keyboard = GetOrderKeyboard()
 
@@ -23,7 +23,7 @@ func HandleOrderCancel(nambaTaxiAPI api.NambaTaxiApi, session storage.Session, d
 	if cancel.Status == "200" {
 		message = "Ваш заказ отменен"
 		keyboard = GetBasicKeyboard()
-		db.Delete(&session)
+		db.Delete(session)
 	}
 	if cancel.Status == "400" {
 		message = "Ваш заказ уже нельзя отменить, он передан водителю"
@@ -34,7 +34,7 @@ func HandleOrderCancel(nambaTaxiAPI api.NambaTaxiApi, session storage.Session, d
 	bot.Send(msg)
 }
 
-func HandleOrderCreate(nambaTaxiAPI api.NambaTaxiApi, session storage.Session, db *gorm.DB, update tgbotapi.Update, bot *tgbotapi.BotAPI) {
+func HandleOrderCreate(nambaTaxiAPI api.NambaTaxiApi, session *storage.Session, db *gorm.DB, update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	session.Address = update.Message.Text
 	orderOptions := map[string][]string{
 		"phone_number": {session.Phone},
@@ -44,14 +44,14 @@ func HandleOrderCreate(nambaTaxiAPI api.NambaTaxiApi, session storage.Session, d
 
 	order, err := nambaTaxiAPI.MakeOrder(orderOptions)
 	if err != nil {
-		db.Delete(&session)
+		db.Delete(session)
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка создания заказа. Попробуйте еще раз")
 		bot.Send(msg)
 		return
 	}
 	session.State = storage.STATE_ORDER_CREATED
 	session.OrderId = order.OrderId
-	db.Save(&session)
+	db.Save(session)
 
 	address := storage.Address{}
 	address.ChatID = session.ChatID
