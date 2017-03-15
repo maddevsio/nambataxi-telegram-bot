@@ -3,10 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
-
-	"time"
 
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
 	"github.com/maddevsio/nambataxi-telegram-bot/chat"
@@ -105,84 +102,14 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			return
 
 		case storage.STATE_NEED_ADDRESS:
-			session.Address = update.Message.Text
-			orderOptions := map[string][]string{
-				"phone_number": {session.Phone},
-				"address":      {session.Address},
-				"fare":         {strconv.Itoa(session.FareId)},
-			}
-
-			order, err := nambaTaxiAPI.MakeOrder(orderOptions)
-			if err != nil {
-				delete(sessions, update.Message.Chat.ID)
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка создания заказа. Попробуйте еще раз")
-				bot.Send(msg)
-				return
-			}
-			session.State = storage.STATE_ORDER_CREATED
-			session.OrderId = order.OrderId
-			db.Save(&session)
-
-			address := storage.Address{}
-			address.ChatID = session.ChatID
-			address.Text = session.Address
-			db.FirstOrCreate(&address, storage.Address{ChatID: address.ChatID, Text: address.Text})
-
-			phone := storage.Phone{}
-			phone.ChatID = session.ChatID
-			phone.Text = session.Phone
-			db.FirstOrCreate(&phone, storage.Phone{ChatID: phone.ChatID, Text: phone.Text})
-
-			go func() {
-				var status = "Новый заказ"
-				for {
-					time.Sleep(5 * time.Second)
-					log.Printf("Session order id: %v", session.OrderId)
-					currentOrder, err := nambaTaxiAPI.GetOrder(session.OrderId)
-					if err != nil {
-						log.Printf("Error getting order status %v", err)
-						return
-					} else {
-						log.Printf("Order status %v", currentOrder.Status)
-					}
-					if status != currentOrder.Status {
-						chat.OrderStatusReaction(currentOrder, update, bot, db, session)
-					}
-					status = currentOrder.Status
-					if currentOrder.Status == "Отклонен" || currentOrder.Status == "Выполнен" {
-						return
-					}
-				}
-			}()
-
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
-			msg.ReplyMarkup = chat.GetOrderKeyboard()
-			bot.Send(msg)
+			// TODO: need to pass a structure, not this old-school list of params
+			chat.HandleOrderCreate(nambaTaxiAPI, session, db, update, bot)
+			chat.StartStatusReactionGoroutine(nambaTaxiAPI, update, bot, db, session)
 			return
 
 		case storage.STATE_ORDER_CREATED:
 			if update.Message.Text == "Отменить мой заказ" {
-				var message string
-				var keyboard = orderKeyboard
-
-				cancel, err := nambaTaxiAPI.CancelOrder(session.OrderId)
-				if err != nil {
-					message = "Произошла системная ошибка. Попробуйте еще раз"
-					log.Printf("Error canceling order %v", err)
-				}
-
-				if cancel.Status == "200" {
-					message = "Ваш заказ отменен"
-					keyboard = basicKeyboard
-					db.Delete(&session)
-				}
-				if cancel.Status == "400" {
-					message = "Ваш заказ уже нельзя отменить, он передан водителю"
-				}
-
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, message)
-				msg.ReplyMarkup = keyboard
-				bot.Send(msg)
+				chat.HandleOrderCancel(nambaTaxiAPI, session, db, update, bot)
 				return
 			}
 

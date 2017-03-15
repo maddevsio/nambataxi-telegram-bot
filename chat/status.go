@@ -6,7 +6,33 @@ import (
 	"github.com/maddevsio/nambataxi-telegram-bot/api"
 	"github.com/jinzhu/gorm"
 	"github.com/maddevsio/nambataxi-telegram-bot/storage"
+	"time"
+	"log"
 )
+
+func StartStatusReactionGoroutine(nambaTaxiAPI api.NambaTaxiApi, update tgbotapi.Update, bot *tgbotapi.BotAPI, db *gorm.DB, session storage.Session) {
+	go func(session storage.Session) {
+		var status = "Новый заказ"
+		for {
+			time.Sleep(5 * time.Second)
+			log.Printf("Session order id: %v", session.OrderId)
+			currentOrder, err := nambaTaxiAPI.GetOrder(session.OrderId)
+			if err != nil {
+				log.Printf("Error getting order status %v", err)
+				return
+			} else {
+				log.Printf("Order status %v", currentOrder.Status)
+			}
+			if status != currentOrder.Status {
+				OrderStatusReaction(currentOrder, update, bot, db, session)
+			}
+			status = currentOrder.Status
+			if currentOrder.Status == "Отклонен" || currentOrder.Status == "Выполнен" {
+				return
+			}
+		}
+	}(session)
+}
 
 func OrderStatusReaction(order api.Order, update tgbotapi.Update, bot *tgbotapi.BotAPI, db *gorm.DB, session storage.Session) {
 	basicKeyboard := GetBasicKeyboard()
