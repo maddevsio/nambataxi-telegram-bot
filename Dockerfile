@@ -5,3 +5,4 @@ RUN apt-get update -y && apt-get install -y
 RUN go get github.com/maddevsio/nambataxi-telegram-bot
 RUN go build github.com/maddevsio/nambataxi-telegram-bot
 RUN ./nambataxi-telegram-bot
+# TODO: need to use config with prod values via env
