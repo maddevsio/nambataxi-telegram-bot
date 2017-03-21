@@ -16,7 +16,7 @@ var (
 	nambaTaxiAPI api.NambaTaxiApi
 
 	config   = simple_config.NewSimpleConfig("config", "yml")
-	db       = storage.GetGormDB("namba-taxi-bot.db")
+	db       = storage.GetGormDB(config.GetString("db_path"))
 )
 
 func main() {

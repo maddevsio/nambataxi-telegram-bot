@@ -1,6 +1,7 @@
 bot_token:
 partner_id:
 server_token:
+db_path: ./namba-taxi-bot.db
 url: https://partners.staging.swift.kg/api
 version: v1
 bot_debug: true
