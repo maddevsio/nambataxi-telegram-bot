@@ -89,7 +89,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			fareID, err := chat.GetFareIdByName(update.Message.Text)
 			if err != nil {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка! Не удалось получить тариф по имени. Попробуйте еще раз")
-				msg.ReplyMarkup = basicKeyboard
+				msg.ReplyMarkup = chat.GetFaresKeyboard()
 				bot.Send(msg)
 				return
 			}
