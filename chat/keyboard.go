@@ -24,6 +24,16 @@ func GetBasicKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	return keyboard
 }
 
+func GetPhoneKeyboard() tgbotapi.ReplyKeyboardMarkup {
+	keyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButtonContact("Отправить ваш номер телефона"),
+		),
+	)
+	keyboard.OneTimeKeyboard = true
+	return keyboard
+}
+
 func GetOrderKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	keyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(

@@ -68,11 +68,14 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		switch session.State {
 
 		case storage.STATE_NEED_PHONE:
-			if !strings.HasPrefix(update.Message.Text, "+996") {
+			// TODO: need to use phone var from Contact struct or from text
+			if !strings.HasPrefix(update.Message.Contact.PhoneNumber, "+996") {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон должен начинаться с +996")
 				phones := storage.GetLastPhonesByChatID(db, session.ChatID)
 				if len(phones) > 0 {
 					msg.ReplyMarkup = chat.GetPhonesKeyboard(phones)
+				} else {
+					msg.ReplyMarkup = chat.GetPhoneKeyboard()
 				}
 				bot.Send(msg)
 				return
@@ -148,6 +151,8 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		phones := storage.GetLastPhonesByChatID(db, session.ChatID)
 		if len(phones) > 0 {
 			msg.ReplyMarkup = chat.GetPhonesKeyboard(phones)
+		} else {
+			msg.ReplyMarkup = chat.GetPhoneKeyboard()
 		}
 		bot.Send(msg)
 		return
