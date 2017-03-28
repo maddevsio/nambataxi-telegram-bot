@@ -65,6 +65,16 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
 
 	if session.ChatID != int64(0) {
+
+		if update.Message.Text == "Отмена" {
+			session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
+			db.Delete(&session)
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вас приветствует бот Намба Такси для мессенджера Телеграм")
+			msg.ReplyMarkup = basicKeyboard
+			bot.Send(msg)
+			return
+		}
+
 		switch session.State {
 
 		case storage.STATE_NEED_PHONE:
