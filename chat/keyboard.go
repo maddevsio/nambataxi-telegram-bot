@@ -10,6 +10,7 @@ import (
 )
 
 var NambaTaxiApi api.NambaTaxiApi
+var toTheStart = "Сначала"
 
 func GetBasicKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	keyboard := tgbotapi.NewReplyKeyboard(
@@ -30,7 +31,7 @@ func GetPhoneKeyboard() tgbotapi.ReplyKeyboardMarkup {
 			tgbotapi.NewKeyboardButtonContact("Отправить ваш номер телефона"),
 		),
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButtonContact("Сначала"),
+			tgbotapi.NewKeyboardButtonContact(toTheStart),
 		),
 	)
 	keyboard.OneTimeKeyboard = true
@@ -61,7 +62,7 @@ func GetFaresKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	for _, fare := range fares.Fare {
 		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(fare.Name)))
 	}
-	rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton("Сначала")))
+	rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(toTheStart)))
 
 	keyboard := tgbotapi.NewReplyKeyboard(rows...)
 	keyboard.OneTimeKeyboard = true
@@ -73,6 +74,7 @@ func GetAddressKeyboard(addresses []storage.Address) tgbotapi.ReplyKeyboardMarku
 	for _, address := range addresses {
 		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(address.Text)))
 	}
+	rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(toTheStart)))
 	keyboard := tgbotapi.NewReplyKeyboard(rows...)
 	keyboard.OneTimeKeyboard = true
 	return keyboard
@@ -83,7 +85,7 @@ func GetPhonesKeyboard(phones []storage.Phone) tgbotapi.ReplyKeyboardMarkup {
 	for _, phone := range phones {
 		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(phone.Text)))
 	}
-	rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton("Сначала")))
+	rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(toTheStart)))
 	keyboard := tgbotapi.NewReplyKeyboard(rows...)
 	keyboard.OneTimeKeyboard = true
 	return keyboard
