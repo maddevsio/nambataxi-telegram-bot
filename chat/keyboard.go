@@ -29,6 +29,9 @@ func GetPhoneKeyboard() tgbotapi.ReplyKeyboardMarkup {
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButtonContact("Отправить ваш номер телефона"),
 		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButtonContact("Сначала"),
+		),
 	)
 	keyboard.OneTimeKeyboard = true
 	return keyboard
@@ -58,6 +61,7 @@ func GetFaresKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	for _, fare := range fares.Fare {
 		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(fare.Name)))
 	}
+	rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton("Сначала")))
 
 	keyboard := tgbotapi.NewReplyKeyboard(rows...)
 	keyboard.OneTimeKeyboard = true
@@ -79,6 +83,7 @@ func GetPhonesKeyboard(phones []storage.Phone) tgbotapi.ReplyKeyboardMarkup {
 	for _, phone := range phones {
 		rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton(phone.Text)))
 	}
+	rows = append(rows, tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton("Сначала")))
 	keyboard := tgbotapi.NewReplyKeyboard(rows...)
 	keyboard.OneTimeKeyboard = true
 	return keyboard

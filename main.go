@@ -66,8 +66,9 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 	if session.ChatID != int64(0) {
 
-		if update.Message.Text == "Отмена" {
+		if update.Message.Text == "Сначала" {
 			session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
+			chat.HandleOrderCancel(nambaTaxiAPI, &session, db, update, bot)
 			db.Delete(&session)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вас приветствует бот Намба Такси для мессенджера Телеграм")
 			msg.ReplyMarkup = basicKeyboard
