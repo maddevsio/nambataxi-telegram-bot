@@ -191,10 +191,11 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			)
 		}
 
-		faresText = faresText + "Для получения подробной информации посетите https://nambataxi.kg/ru/tariffs/"
+		faresText = faresText + "_Для получения подробной информации посетите_ https://nambataxi.kg/ru/tariffs/"
 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, faresText)
 		msg.ReplyMarkup = basicKeyboard
+		msg.ParseMode = "Markdown"
 		bot.Send(msg)
 		return
 	}
