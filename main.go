@@ -70,7 +70,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
 			chat.HandleOrderCancel(nambaTaxiAPI, &session, db, update, bot)
 			db.Delete(&session)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вас приветствует бот Намба Такси для мессенджера Телеграм")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_WELCOME_MESSAGE)
 			msg.ReplyMarkup = basicKeyboard
 			bot.Send(msg)
 			return
@@ -210,7 +210,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	}
 
 	if update.Message.Text == "/start" {
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вас приветствует бот Намба Такси для мессенджера Телеграм")
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_WELCOME_MESSAGE)
 		msg.ReplyMarkup = basicKeyboard
 		bot.Send(msg)
 		return
