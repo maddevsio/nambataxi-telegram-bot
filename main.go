@@ -191,7 +191,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			)
 		}
 
-		faresText = faresText + "_Для получения подробной информации посетите_ https://nambataxi.kg/ru/tariffs/"
+		faresText = faresText + chat.BOT_FARES_LINK
 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, faresText)
 		msg.ReplyMarkup = basicKeyboard
@@ -203,7 +203,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	if update.Message.Text == "Узнать статус моего заказа" {
 		session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
 		db.Delete(&session)
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "К сожалению у вас нет заказа")
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_NO_ORDERS)
 		msg.ReplyMarkup = basicKeyboard
 		bot.Send(msg)
 		return

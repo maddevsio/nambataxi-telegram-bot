@@ -63,12 +63,7 @@ func OrderStatusReaction(order api.Order, update tgbotapi.Update, bot *tgbotapi.
 
 	if order.Status == "Выполнен" {
 		db.Delete(&session)
-		msg = tgbotapi.NewMessage(update.Message.Chat.ID,
-			"Ваш заказ выполнен. Спасибо, что воспользовались услугами Намба Такси. Если вдруг что-то не так, то телефон Отдела Контроля Качества к вашим услугам:\n"+
-				"+996 (312) 97-90-60\n"+
-				"+996 (701) 97-67-03\n"+
-				"+996 (550) 97-60-23",
-		)
+		msg = tgbotapi.NewMessage(update.Message.Chat.ID, BOT_ORDER_DONE)
 		msg.ReplyMarkup = basicKeyboard
 		bot.Send(msg)
 		return
