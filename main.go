@@ -162,7 +162,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		session.ChatID = update.Message.Chat.ID
 		session.State = storage.STATE_NEED_PHONE
 		db.Create(&session)
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш телефон. Например: +996555112233")
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ASK_PHONE)
 		phones := storage.GetLastPhonesByChatID(db, session.ChatID)
 		if len(phones) > 0 {
 			msg.ReplyMarkup = chat.GetPhonesKeyboard(phones)
@@ -176,7 +176,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	if update.Message.Text == "Тарифы" {
 		fares, err := nambaTaxiAPI.GetFares()
 		if err != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка. Не удалось получить тарифы. Попробуйте еще раз")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ERROR_GET_FARES)
 			msg.ReplyMarkup = basicKeyboard
 			bot.Send(msg)
 			return
