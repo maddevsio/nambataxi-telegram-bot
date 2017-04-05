@@ -66,7 +66,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 	if session.ChatID != int64(0) {
 
-		if update.Message.Text == "Сначала" {
+		if update.Message.Text == "/Cancel" {
 			session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
 			chat.HandleOrderCancel(nambaTaxiAPI, &session, db, update, bot)
 			db.Delete(&session)
@@ -85,7 +85,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			}
 
 			if !strings.HasPrefix(phone, "+996") {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон должен начинаться с +996")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_PHONE_START_996)
 				phones := storage.GetLastPhonesByChatID(db, session.ChatID)
 				if len(phones) > 0 {
 					msg.ReplyMarkup = chat.GetPhonesKeyboard(phones)
@@ -98,7 +98,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session.Phone = phone
 			session.State = storage.STATE_NEED_FARE
 			db.Save(&session)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Телефон сохранен. Теперь укажите тариф")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ASK_FARE)
 			msg.ReplyMarkup = chat.GetFaresKeyboard()
 			bot.Send(msg)
 			return
@@ -106,7 +106,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		case storage.STATE_NEED_FARE:
 			fareID, err := chat.GetFareIdByName(update.Message.Text)
 			if err != nil {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка! Не удалось получить тариф по имени. Попробуйте еще раз")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ERROR_GET_1_FARE)
 				msg.ReplyMarkup = chat.GetFaresKeyboard()
 				bot.Send(msg)
 				return
@@ -114,7 +114,7 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			session.FareId = fareID
 			session.State = storage.STATE_NEED_ADDRESS
 			db.Save(&session)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Укажите ваш адрес. Куда подать машину?")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ASK_ADDRESS)
 			addresses := storage.GetLastAddressByChatID(db, session.ChatID)
 			if len(addresses) > 0 {
 				msg.ReplyMarkup = chat.GetAddressKeyboard(addresses)
