@@ -36,6 +36,7 @@ func main() {
 		log.Panicf("Error connecting to Telegram: %v", err)
 	}
 
+	//TODO: need to check env var assignment
 	bot.Debug = config.Get("bot_debug").(bool)
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
