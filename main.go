@@ -10,6 +10,7 @@ import (
 	"github.com/maddevsio/nambataxi-telegram-bot/storage"
 	"github.com/maddevsio/simple-config"
 	"gopkg.in/telegram-bot-api.v4"
+	"strconv"
 )
 
 var (
@@ -36,8 +37,10 @@ func main() {
 		log.Panicf("Error connecting to Telegram: %v", err)
 	}
 
-	//TODO: need to check env var assignment
-	bot.Debug = config.Get("bot_debug").(bool)
+	bot.Debug, err = strconv.ParseBool(config.GetString("bot_debug"))
+	if err != nil {
+		log.Panicf("Cannot convert debug status from config: %v", err)
+	}
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
