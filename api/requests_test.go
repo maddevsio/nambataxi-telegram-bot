@@ -36,6 +36,14 @@ func TestGetPaymentMethods(t *testing.T) {
 	assert.Equal(t, 4, len(paymentMethods.PaymentMethod))
 }
 
+func TestGetNearestDrivers(t *testing.T) {
+	api := getApi()
+	nearestDrivers, err := api.GetNearestDrivers("Московская Советская")
+	assert.NoError(t, err)
+	assert.Equal(t, "200", nearestDrivers.Status)
+	assert.Equal(t, "Drivers found", nearestDrivers.Message)
+}
+
 func TestGetRequestOptions(t *testing.T) {
 	api := getApi()
 	requestOptions, err := api.GetRequestOptions()
@@ -67,3 +75,4 @@ func TestMakeOrder_GetOrder_DeleteOrder(t *testing.T) {
 	cancel2, err := api.CancelOrder(order2.OrderId)
 	assert.Equal(t, "400", cancel2.Status)
 }
+

@@ -67,8 +67,26 @@ type Cancel struct {
 	Message string `json:"message"`
 }
 
+type NearestDrivers struct {
+	Status string `json:"status"`
+	Message string `json:"message"`
+	Drivers int `json:"drivers"`
+}
+
 func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
 	return NambaTaxiApi{partnerID, serverToken, url, version}
+}
+
+func (api *NambaTaxiApi) GetNearestDrivers(address string) (NearestDrivers, error) {
+	postParams := map[string][]string{
+		"address": {address},
+	}
+	structure := NearestDrivers{}
+	err := api.makePostRequestAndMapStructure(&structure, "nearest_drivers", postParams)
+	if err != nil {
+		return NearestDrivers{}, err
+	}
+	return structure, nil
 }
 
 func (api *NambaTaxiApi) GetFares() (Fares, error) {
