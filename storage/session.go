@@ -1,6 +1,8 @@
 package storage
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 type Session struct {
 	gorm.Model

@@ -8,7 +8,7 @@ import (
 
 var config = simple_config.NewSimpleConfig("../config", "yml")
 
-func getApi() NambaTaxiApi{
+func getApi() NambaTaxiAPI {
 	return NewNambaTaxiApi(
 		config.GetString("partner_id"),
 		config.GetString("server_token"),

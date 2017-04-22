@@ -9,7 +9,7 @@ import (
 	"github.com/maddevsio/nambataxi-telegram-bot/storage"
 )
 
-var NambaTaxiApi api.NambaTaxiApi
+var NambaTaxiApi api.NambaTaxiAPI
 
 func GetBasicKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	keyboard := tgbotapi.NewReplyKeyboard(

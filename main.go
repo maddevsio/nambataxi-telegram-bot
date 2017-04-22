@@ -11,43 +11,45 @@ import (
 	"github.com/maddevsio/simple-config"
 	"gopkg.in/telegram-bot-api.v4"
 	"strconv"
+	"github.com/maddevsio/nambataxi-telegram-bot/holder"
 )
 
 var (
-	nambaTaxiAPI api.NambaTaxiApi
-
-	config   = simple_config.NewSimpleConfig("config", "yml")
-	db       = storage.GetGormDB(config.GetString("db_path"))
+	service  holder.Service
+	err error
 )
 
 func main() {
-	storage.MigrateAll(db)
+	service.Config = simple_config.NewSimpleConfig("config", "yml")
+	service.DB = storage.GetGormDB(service.Config.GetString("db_path"))
 
-	nambaTaxiAPI = api.NewNambaTaxiApi(
-		config.GetString("partner_id"),
-		config.GetString("server_token"),
-		config.GetString("url"),
-		config.GetString("version"),
+	storage.MigrateAll(service.DB)
+
+	service.NambaTaxiAPI = api.NewNambaTaxiApi(
+		service.Config.GetString("partner_id"),
+		service.Config.GetString("server_token"),
+		service.Config.GetString("url"),
+		service.Config.GetString("version"),
 	)
 
-	chat.NambaTaxiApi = nambaTaxiAPI //init this for keyboards
+	chat.NambaTaxiApi = service.NambaTaxiAPI //init this for keyboards
 
-	bot, err := tgbotapi.NewBotAPI(config.GetString("bot_token"))
+	service.Bot, err = tgbotapi.NewBotAPI(service.Config.GetString("bot_token"))
 	if err != nil {
 		log.Panicf("Error connecting to Telegram: %v", err)
 	}
 
-	bot.Debug, err = strconv.ParseBool(config.GetString("bot_debug"))
+	service.Bot.Debug, err = strconv.ParseBool(service.Config.GetString("bot_debug"))
 	if err != nil {
 		log.Panicf("Cannot convert debug status from config: %v", err)
 	}
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	log.Printf("Authorized on account %s", service.Bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	updates, err := bot.GetUpdatesChan(u)
+	updates, err := service.Bot.GetUpdatesChan(u)
 
 	if err != nil {
 		log.Panicf("Error getting updates channel %v", err)
@@ -59,49 +61,51 @@ func main() {
 		}
 
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-		chatStateMachine(update, bot)
+		service.Update = update
+		chatStateMachine(&service)
 	}
 }
 
-func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
+func chatStateMachine(service *holder.Service) {
 	basicKeyboard := chat.GetBasicKeyboard()
 	orderKeyboard := chat.GetOrderKeyboard()
-	session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
+	chatID := service.Update.Message.Chat.ID
+	session := storage.GetSessionByChatID(service.DB, chatID)
 
 	if session.ChatID != int64(0) {
 
-		if update.Message.Text == "/Cancel" {
-			session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
-			chat.HandleOrderCancel(nambaTaxiAPI, &session, db, update, bot)
-			db.Delete(&session)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_WELCOME_MESSAGE)
+		if service.Update.Message.Text == "/Cancel" {
+			session := storage.GetSessionByChatID(service.DB, chatID)
+			chat.HandleOrderCancel(service, &session)
+			service.DB.Delete(&session)
+			msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_WELCOME_MESSAGE)
 			msg.ReplyMarkup = basicKeyboard
-			bot.Send(msg)
+			service.Bot.Send(msg)
 			return
 		}
 
-		if update.Message.Text == "Машины рядом" {
+		if service.Update.Message.Text == "Машины рядом" {
 			if session.State == storage.STATE_ORDER_CREATED {
-				nearestDrivers, err := nambaTaxiAPI.GetNearestDrivers(session.Address)
+				nearestDrivers, err := service.NambaTaxiAPI.GetNearestDrivers(session.Address)
 				if err != nil {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения машин рядом: %v", err))
+					msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(chat.BOT_ERROR_GET_NEAREST_DRIVERS, err))
 					msg.ReplyMarkup = orderKeyboard
-					bot.Send(msg)
+					service.Bot.Send(msg)
 					return
 				}
 				if nearestDrivers.Status != "200" {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения машин рядом: %v", nearestDrivers.Message))
+					msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(chat.BOT_ERROR_GET_NEAREST_DRIVERS, nearestDrivers.Message))
 					msg.ReplyMarkup = orderKeyboard
-					bot.Send(msg)
+					service.Bot.Send(msg)
 					return
 				}
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Рядом с вами %v машин", nearestDrivers.Drivers))
+				msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(chat.BOT_NEAREST_DRIVERS, nearestDrivers.Drivers))
 				msg.ReplyMarkup = orderKeyboard
-				bot.Send(msg)
+				service.Bot.Send(msg)
 				return
 			} else {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ERROR_EARLY_NEAREST_DRIVERS)
-				bot.Send(msg)
+				msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ERROR_EARLY_NEAREST_DRIVERS)
+				service.Bot.Send(msg)
 				return
 			}
 		}
@@ -109,112 +113,112 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		switch session.State {
 
 		case storage.STATE_NEED_PHONE:
-			phone := update.Message.Text
-			if update.Message.Contact != nil {
-				phone = "+" + update.Message.Contact.PhoneNumber
+			phone := service.Update.Message.Text
+			if service.Update.Message.Contact != nil {
+				phone = "+" + service.Update.Message.Contact.PhoneNumber
 			}
 
 			if !strings.HasPrefix(phone, "+996") {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_PHONE_START_996)
-				phones := storage.GetLastPhonesByChatID(db, session.ChatID)
+				msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_PHONE_START_996)
+				phones := storage.GetLastPhonesByChatID(service.DB, chatID)
 				if len(phones) > 0 {
 					msg.ReplyMarkup = chat.GetPhonesKeyboard(phones)
 				} else {
 					msg.ReplyMarkup = chat.GetPhoneKeyboard()
 				}
-				bot.Send(msg)
+				service.Bot.Send(msg)
 				return
 			}
 			session.Phone = phone
 			session.State = storage.STATE_NEED_FARE
-			db.Save(&session)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ASK_FARE)
+			service.DB.Save(&session)
+			msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ASK_FARE)
 			msg.ReplyMarkup = chat.GetFaresKeyboard()
-			bot.Send(msg)
+			service.Bot.Send(msg)
 			return
 
 		case storage.STATE_NEED_FARE:
-			fareID, err := chat.GetFareIdByName(update.Message.Text)
+			fareID, err := chat.GetFareIdByName(service.Update.Message.Text)
 			if err != nil {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ERROR_GET_1_FARE)
+				msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ERROR_GET_1_FARE)
 				msg.ReplyMarkup = chat.GetFaresKeyboard()
-				bot.Send(msg)
+				service.Bot.Send(msg)
 				return
 			}
 			session.FareId = fareID
 			session.State = storage.STATE_NEED_ADDRESS
-			db.Save(&session)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ASK_ADDRESS)
-			addresses := storage.GetLastAddressByChatID(db, session.ChatID)
+			service.DB.Save(&session)
+			msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ASK_ADDRESS)
+			addresses := storage.GetLastAddressByChatID(service.DB, chatID)
 			if len(addresses) > 0 {
 				msg.ReplyMarkup = chat.GetAddressKeyboard(addresses)
 			}
-			bot.Send(msg)
+			service.Bot.Send(msg)
 			return
 
 		case storage.STATE_NEED_ADDRESS:
 			// TODO: need to pass a structure, not this old-school list of params
-			chat.HandleOrderCreate(nambaTaxiAPI, &session, db, update, bot)
-			chat.StartStatusReactionGoroutine(nambaTaxiAPI, update, bot, db, session)
+			chat.HandleOrderCreate(service, &session)
+			chat.StartStatusReactionGoroutine(service, session)
 			return
 
 		case storage.STATE_ORDER_CREATED:
-			if update.Message.Text == "Отменить мой заказ" {
-				chat.HandleOrderCancel(nambaTaxiAPI, &session, db, update, bot)
+			if service.Update.Message.Text == "Отменить мой заказ" {
+				chat.HandleOrderCancel(service, &session)
 				return
 			}
 
-			order, err := nambaTaxiAPI.GetOrder(session.OrderId)
+			order, err := service.NambaTaxiAPI.GetOrder(session.OrderId)
 			if err != nil {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения заказа: %v", err))
+				msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(chat.BOT_ERROR_GET_ORDER, err))
 				msg.ReplyMarkup = orderKeyboard
-				bot.Send(msg)
+				service.Bot.Send(msg)
 				return
 			}
 
-			chat.OrderStatusReaction(order, update, bot, db, session)
+			chat.OrderStatusReaction(service, order, session)
 			return
 
 		default:
-			db.Delete(&session)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Заказ не открыт. Откройте заново")
-			msg.ReplyToMessageID = update.Message.MessageID
+			service.DB.Delete(&session)
+			msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ORDER_NOT_CREATED)
+			msg.ReplyToMessageID = service.Update.Message.MessageID
 			msg.ReplyMarkup = basicKeyboard
-			bot.Send(msg)
+			service.Bot.Send(msg)
 			return
 		}
 	}
 
 	// messages reactions while out of session scope
 
-	if update.Message.Text == "Быстрый заказ такси" {
+	if service.Update.Message.Text == "Быстрый заказ такси" {
 		session := &storage.Session{}
-		session.ChatID = update.Message.Chat.ID
+		session.ChatID = service.Update.Message.Chat.ID
 		session.State = storage.STATE_NEED_PHONE
-		db.Create(&session)
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ASK_PHONE)
-		phones := storage.GetLastPhonesByChatID(db, session.ChatID)
+		service.DB.Create(&session)
+		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ASK_PHONE)
+		phones := storage.GetLastPhonesByChatID(service.DB, chatID)
 		if len(phones) > 0 {
 			msg.ReplyMarkup = chat.GetPhonesKeyboard(phones)
 		} else {
 			msg.ReplyMarkup = chat.GetPhoneKeyboard()
 		}
-		bot.Send(msg)
+		service.Bot.Send(msg)
 		return
 	}
 
-	if update.Message.Text == "Тарифы" {
-		fares, err := nambaTaxiAPI.GetFares()
+	if service.Update.Message.Text == "Тарифы" {
+		fares, err := service.NambaTaxiAPI.GetFares()
 		if err != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ERROR_GET_FARES)
+			msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ERROR_GET_FARES)
 			msg.ReplyMarkup = basicKeyboard
-			bot.Send(msg)
+			service.Bot.Send(msg)
 			return
 		}
 
 		var faresText string
 		for _, fare := range fares.Fare {
-			faresText = faresText + fmt.Sprintf("Тариф: %v. Стоимость посадки: %.2f. Стоимость за километр: %.2f.\n\n",
+			faresText = faresText + fmt.Sprintf(chat.BOT_FARE_INFO,
 				fare.Name,
 				fare.Flagfall,
 				fare.Cost_per_kilometer,
@@ -223,32 +227,32 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 		faresText = faresText + chat.BOT_FARES_LINK
 
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, faresText)
+		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, faresText)
 		msg.ReplyMarkup = basicKeyboard
 		msg.ParseMode = "Markdown"
-		bot.Send(msg)
+		service.Bot.Send(msg)
 		return
 	}
 
-	if update.Message.Text == "Узнать статус моего заказа" {
-		session := storage.GetSessionByChatID(db, update.Message.Chat.ID)
-		db.Delete(&session)
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_NO_ORDERS)
+	if service.Update.Message.Text == "Узнать статус моего заказа" {
+		session := storage.GetSessionByChatID(service.DB, chatID)
+		service.DB.Delete(&session)
+		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_NO_ORDERS)
 		msg.ReplyMarkup = basicKeyboard
-		bot.Send(msg)
+		service.Bot.Send(msg)
 		return
 	}
 
-	if update.Message.Text == "/start" {
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_WELCOME_MESSAGE)
+	if service.Update.Message.Text == "/start" {
+		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_WELCOME_MESSAGE)
 		msg.ReplyMarkup = basicKeyboard
-		bot.Send(msg)
+		service.Bot.Send(msg)
 		return
 	}
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Что-что?")
-	msg.ReplyToMessageID = update.Message.MessageID
+	msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, "Что-что?")
+	msg.ReplyToMessageID = service.Update.Message.MessageID
 	msg.ReplyMarkup = basicKeyboard
-	bot.Send(msg)
+	service.Bot.Send(msg)
 	return
 }

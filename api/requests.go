@@ -16,7 +16,7 @@ const (
 	SERVER_TOKEN = "server_token"
 )
 
-type NambaTaxiApi struct {
+type NambaTaxiAPI struct {
 	partnerID string
 	serverToken string
 	url string
@@ -73,11 +73,11 @@ type NearestDrivers struct {
 	Drivers int `json:"drivers"`
 }
 
-func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiApi {
-	return NambaTaxiApi{partnerID, serverToken, url, version}
+func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiAPI {
+	return NambaTaxiAPI{partnerID, serverToken, url, version}
 }
 
-func (api *NambaTaxiApi) GetNearestDrivers(address string) (NearestDrivers, error) {
+func (api *NambaTaxiAPI) GetNearestDrivers(address string) (NearestDrivers, error) {
 	postParams := map[string][]string{
 		"address": {address},
 	}
@@ -89,7 +89,7 @@ func (api *NambaTaxiApi) GetNearestDrivers(address string) (NearestDrivers, erro
 	return structure, nil
 }
 
-func (api *NambaTaxiApi) GetFares() (Fares, error) {
+func (api *NambaTaxiAPI) GetFares() (Fares, error) {
 	structure := Fares{}
 	err := api.makePostRequestAndMapStructure(&structure, "fares", make(map[string][]string))
 	if err != nil {
@@ -98,7 +98,7 @@ func (api *NambaTaxiApi) GetFares() (Fares, error) {
 	return structure, nil
 }
 
-func (api *NambaTaxiApi) GetPaymentMethods() (PaymentMethods, error) {
+func (api *NambaTaxiAPI) GetPaymentMethods() (PaymentMethods, error) {
 	structure := PaymentMethods{}
 	err := api.makePostRequestAndMapStructure(&structure, "payment-methods", make(map[string][]string))
 	if err != nil {
@@ -107,7 +107,7 @@ func (api *NambaTaxiApi) GetPaymentMethods() (PaymentMethods, error) {
 	return structure, nil
 }
 
-func (api *NambaTaxiApi) GetRequestOptions() (RequestOptions, error) {
+func (api *NambaTaxiAPI) GetRequestOptions() (RequestOptions, error) {
 	structure := RequestOptions{}
 	err := api.makePostRequestAndMapStructure(&structure, "request-options", make(map[string][]string))
 	if err != nil {
@@ -116,7 +116,7 @@ func (api *NambaTaxiApi) GetRequestOptions() (RequestOptions, error) {
 	return structure, nil
 }
 
-func (api *NambaTaxiApi) MakeOrder(orderOptions map[string][]string) (Order, error) {
+func (api *NambaTaxiAPI) MakeOrder(orderOptions map[string][]string) (Order, error) {
 	structure := Order{}
 	err := api.makePostRequestAndMapStructure(&structure, "requests", orderOptions)
 	if err != nil {
@@ -125,7 +125,7 @@ func (api *NambaTaxiApi) MakeOrder(orderOptions map[string][]string) (Order, err
 	return structure, nil
 }
 
-func (api *NambaTaxiApi) GetOrder(id int) (Order, error) {
+func (api *NambaTaxiAPI) GetOrder(id int) (Order, error) {
 	structure := Order{}
 	err := api.makePostRequestAndMapStructure(&structure, "requests/"+strconv.Itoa(id), make(map[string][]string))
 	if err != nil {
@@ -134,7 +134,7 @@ func (api *NambaTaxiApi) GetOrder(id int) (Order, error) {
 	return structure, nil
 }
 
-func (api *NambaTaxiApi) CancelOrder(id int) (Cancel, error) {
+func (api *NambaTaxiAPI) CancelOrder(id int) (Cancel, error) {
 	structure := Cancel{}
 	err := api.makePostRequestAndMapStructure(&structure, "cancel_order/"+strconv.Itoa(id), make(map[string][]string))
 	if err != nil {
@@ -143,7 +143,7 @@ func (api *NambaTaxiApi) CancelOrder(id int) (Cancel, error) {
 	return structure, nil
 }
 
-func (api *NambaTaxiApi) makePostRequestAndMapStructure(structure interface{}, uri string, postParams map[string][]string) (error) {
+func (api *NambaTaxiAPI) makePostRequestAndMapStructure(structure interface{}, uri string, postParams map[string][]string) (error) {
 	jsonData, err := api.makePostRequest(uri, postParams)
 	if err != nil {
 		return err
@@ -155,7 +155,7 @@ func (api *NambaTaxiApi) makePostRequestAndMapStructure(structure interface{}, u
 	return nil
 }
 
-func (api *NambaTaxiApi) makePostRequest(uri string, postParams map[string][]string) ([]byte, error) {
+func (api *NambaTaxiAPI) makePostRequest(uri string, postParams map[string][]string) ([]byte, error) {
 	var values url.Values = map[string][]string{
 		PARTNER_ID:   {api.partnerID},
 		SERVER_TOKEN: {api.serverToken},
@@ -182,7 +182,7 @@ func (api *NambaTaxiApi) makePostRequest(uri string, postParams map[string][]str
 	return body, nil
 }
 
-func (api *NambaTaxiApi) getApiURL(uri string) string {
+func (api *NambaTaxiAPI) getApiURL(uri string) string {
 	urlString := fmt.Sprintf("%s/%s/%s/", api.url, api.version, uri)
 	log.Printf("API URL is: %v", urlString)
 	return urlString
