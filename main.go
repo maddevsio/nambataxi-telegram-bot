@@ -80,6 +80,32 @@ func chatStateMachine(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			return
 		}
 
+		if update.Message.Text == "Машины рядом" {
+			if session.State == storage.STATE_ORDER_CREATED {
+				nearestDrivers, err := nambaTaxiAPI.GetNearestDrivers(session.Address)
+				if err != nil {
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения машин рядом: %v", err))
+					msg.ReplyMarkup = orderKeyboard
+					bot.Send(msg)
+					return
+				}
+				if nearestDrivers.Status != "200" {
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения машин рядом: %v", nearestDrivers.Message))
+					msg.ReplyMarkup = orderKeyboard
+					bot.Send(msg)
+					return
+				}
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Рядом с вами %v машин", nearestDrivers.Drivers))
+				msg.ReplyMarkup = orderKeyboard
+				bot.Send(msg)
+				return
+			} else {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, chat.BOT_ERROR_EARLY_NEAREST_DRIVERS)
+				bot.Send(msg)
+				return
+			}
+		}
+
 		switch session.State {
 
 		case storage.STATE_NEED_PHONE:

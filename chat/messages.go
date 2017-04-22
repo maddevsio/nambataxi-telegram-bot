@@ -28,5 +28,6 @@ const (
 	BOT_ASK_FARE = "Телефон сохранен. Теперь укажите тариф\n\n/Cancel"
 	BOT_ASK_ADDRESS = "Укажите ваш адрес. Куда подать машину?\n\n/Cancel"
 	BOT_ERROR_GET_1_FARE = "Ошибка! Не удалось получить тариф по имени. Попробуйте еще раз"
+	BOT_ERROR_EARLY_NEAREST_DRIVERS = "Для начала нужно создать заказ"
 
 )
