@@ -42,6 +42,7 @@ func TestGetNearestDrivers(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "200", nearestDrivers.Status)
 	assert.Equal(t, "Drivers found", nearestDrivers.Message)
+	assert.Equal(t, 0, nearestDrivers.Drivers)
 }
 
 func TestGetRequestOptions(t *testing.T) {
