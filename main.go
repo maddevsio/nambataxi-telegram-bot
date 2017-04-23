@@ -92,26 +92,10 @@ func chatStateMachine(service *holder.Service) {
 			return
 
 		case storage.STATE_NEED_FARE:
-			fareID, err := chat.GetFareIdByName(service.Update.Message.Text)
-			if err != nil {
-				msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ERROR_GET_1_FARE)
-				msg.ReplyMarkup = chat.GetFaresKeyboard()
-				service.Bot.Send(msg)
-				return
-			}
-			session.FareId = fareID
-			session.State = storage.STATE_NEED_ADDRESS
-			service.DB.Save(&session)
-			msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ASK_ADDRESS)
-			addresses := storage.GetLastAddressByChatID(service.DB, chatID)
-			if len(addresses) > 0 {
-				msg.ReplyMarkup = chat.GetAddressKeyboard(addresses)
-			}
-			service.Bot.Send(msg)
+			states.NeedFare(service, &session)
 			return
 
 		case storage.STATE_NEED_ADDRESS:
-			// TODO: need to pass a structure, not this old-school list of params
 			chat.HandleOrderCreate(service, &session)
 			chat.StartStatusReactionGoroutine(service, session)
 			return
@@ -146,67 +130,25 @@ func chatStateMachine(service *holder.Service) {
 	// messages reactions while out of session scope
 
 	if service.Update.Message.Text == "Быстрый заказ такси" {
-		session := &storage.Session{}
-		session.ChatID = service.Update.Message.Chat.ID
-		session.State = storage.STATE_NEED_PHONE
-		service.DB.Create(&session)
-		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ASK_PHONE)
-		phones := storage.GetLastPhonesByChatID(service.DB, chatID)
-		if len(phones) > 0 {
-			msg.ReplyMarkup = chat.GetPhonesKeyboard(phones)
-		} else {
-			msg.ReplyMarkup = chat.GetPhoneKeyboard()
-		}
-		service.Bot.Send(msg)
+		handlers.OrderCreation(service)
 		return
 	}
 
 	if service.Update.Message.Text == "Тарифы" {
-		fares, err := service.NambaTaxiAPI.GetFares()
-		if err != nil {
-			msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ERROR_GET_FARES)
-			msg.ReplyMarkup = basicKeyboard
-			service.Bot.Send(msg)
-			return
-		}
-
-		var faresText string
-		for _, fare := range fares.Fare {
-			faresText = faresText + fmt.Sprintf(chat.BOT_FARE_INFO,
-				fare.Name,
-				fare.Flagfall,
-				fare.Cost_per_kilometer,
-			)
-		}
-
-		faresText = faresText + chat.BOT_FARES_LINK
-
-		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, faresText)
-		msg.ReplyMarkup = basicKeyboard
-		msg.ParseMode = "Markdown"
-		service.Bot.Send(msg)
+		handlers.Fares(service)
 		return
 	}
 
 	if service.Update.Message.Text == "Узнать статус моего заказа" {
-		session := storage.GetSessionByChatID(service.DB, chatID)
-		service.DB.Delete(&session)
-		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_NO_ORDERS)
-		msg.ReplyMarkup = basicKeyboard
-		service.Bot.Send(msg)
+		handlers.OrderStatus(service)
 		return
 	}
 
 	if service.Update.Message.Text == "/start" {
-		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_WELCOME_MESSAGE)
-		msg.ReplyMarkup = basicKeyboard
-		service.Bot.Send(msg)
+		handlers.Start(service)
 		return
 	}
 
-	msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, "Что-что?")
-	msg.ReplyToMessageID = service.Update.Message.MessageID
-	msg.ReplyMarkup = basicKeyboard
-	service.Bot.Send(msg)
+	handlers.Wuuut(service)
 	return
 }
