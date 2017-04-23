@@ -11,8 +11,8 @@ import (
 	"gopkg.in/telegram-bot-api.v4"
 	"strconv"
 	"github.com/maddevsio/nambataxi-telegram-bot/holder"
-	"github.com/maddevsio/nambataxi-telegram-bot/handlers"
-	"github.com/maddevsio/nambataxi-telegram-bot/handlers/states"
+	"github.com/maddevsio/nambataxi-telegram-bot/chat/handlers"
+	"github.com/maddevsio/nambataxi-telegram-bot/chat/handlers/states"
 )
 
 var (
