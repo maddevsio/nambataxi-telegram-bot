@@ -12,6 +12,7 @@ import (
 	"gopkg.in/telegram-bot-api.v4"
 	"strconv"
 	"github.com/maddevsio/nambataxi-telegram-bot/holder"
+	"github.com/maddevsio/nambataxi-telegram-bot/handlers"
 )
 
 var (
@@ -75,39 +76,13 @@ func chatStateMachine(service *holder.Service) {
 	if session.ChatID != int64(0) {
 
 		if service.Update.Message.Text == "/Cancel" {
-			session := storage.GetSessionByChatID(service.DB, chatID)
-			chat.HandleOrderCancel(service, &session)
-			service.DB.Delete(&session)
-			msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_WELCOME_MESSAGE)
-			msg.ReplyMarkup = basicKeyboard
-			service.Bot.Send(msg)
+			handlers.CancelNonCreatedOrder(service, chatID)
 			return
 		}
 
 		if service.Update.Message.Text == "Машины рядом" {
-			if session.State == storage.STATE_ORDER_CREATED {
-				nearestDrivers, err := service.NambaTaxiAPI.GetNearestDrivers(session.Address)
-				if err != nil {
-					msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(chat.BOT_ERROR_GET_NEAREST_DRIVERS, err))
-					msg.ReplyMarkup = orderKeyboard
-					service.Bot.Send(msg)
-					return
-				}
-				if nearestDrivers.Status != "200" {
-					msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(chat.BOT_ERROR_GET_NEAREST_DRIVERS, nearestDrivers.Message))
-					msg.ReplyMarkup = orderKeyboard
-					service.Bot.Send(msg)
-					return
-				}
-				msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(chat.BOT_NEAREST_DRIVERS, nearestDrivers.Drivers))
-				msg.ReplyMarkup = orderKeyboard
-				service.Bot.Send(msg)
-				return
-			} else {
-				msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, chat.BOT_ERROR_EARLY_NEAREST_DRIVERS)
-				service.Bot.Send(msg)
-				return
-			}
+			handlers.NearestDrivers(service, &session)
+			return
 		}
 
 		switch session.State {
