@@ -41,8 +41,7 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 	var msg tgbotapi.MessageConfig
 
 	if order.Status == "Новый заказ" {
-		//nearestDrivers, err := nambaTaxiAPI.GetNearestDrivers(session.Address)
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(BOT_ORDER_THANKS, 3))
+		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ORDER_THANKS)
 		msg.ReplyMarkup = orderKeyboard
 		service.Bot.Send(msg)
 		return
