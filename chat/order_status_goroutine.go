@@ -58,6 +58,16 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 		))
 		msg.ReplyMarkup = orderKeyboard
 		service.Bot.Send(msg)
+
+		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, "Текушее местоположение водителя")
+		msg.ReplyMarkup = orderKeyboard
+		service.Bot.Send(msg)
+
+		loc := tgbotapi.NewLocation(service.Update.Message.Chat.ID, order.Driver.Lat, order.Driver.Lon)
+		loc.ReplyMarkup = orderKeyboard
+		service.Bot.Send(loc)
+
+
 		return
 	}
 

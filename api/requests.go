@@ -59,6 +59,8 @@ type Order struct {
 		CabNumber string `json:"cab_number"`
 		LicensePlate string `json:"license_plate"`
 		Make string `json:"make"`
+		Lat float64 `json:"lat"`
+		Lon float64 `json:"lon"`
 	} `json:"driver"`
 }
 
