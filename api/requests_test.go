@@ -49,7 +49,8 @@ func TestGetRequestOptions(t *testing.T) {
 	api := getApi()
 	requestOptions, err := api.GetRequestOptions()
 	assert.NoError(t, err)
-	assert.Equal(t, 0, len(requestOptions.RequestOption))
+	assert.Equal(t, 1, len(requestOptions.RequestOption))
+	assert.Equal(t, "Курящий", requestOptions.RequestOption[0].Title)
 }
 
 func TestMakeOrder_GetOrder_DeleteOrder(t *testing.T) {

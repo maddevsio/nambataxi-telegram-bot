@@ -180,7 +180,7 @@ func (api *NambaTaxiAPI) makePostRequest(uri string, postParams map[string][]str
 		return nil, errors.New(resp.Status)
 	}
 
-	//log.Print("%v", string(body))
+	log.Printf("%s", string(body))
 	return body, nil
 }
 
