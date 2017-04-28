@@ -24,6 +24,16 @@ func StartStatusReactionGoroutine(service *holder.Service, session storage.Sessi
 				log.Printf("Order status %v", currentOrder.Status)
 			}
 			if status != currentOrder.Status {
+				if currentOrder.Status == "Отклонен" {
+					fetchedSession := storage.GetSessionByChatID(service.DB, session.ChatID)
+					if fetchedSession.ChatID == 0 {
+						// This means that the user has canceled the order already
+						// and we do not need to send him a message from this goroutine.
+						// When a operator cancels the message, this "if" will be not active
+						// and user will get a message
+						return
+					}
+				}
 				OrderStatusReaction(service, currentOrder, session)
 			}
 			status = currentOrder.Status
@@ -85,7 +95,7 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 
 	if order.Status == "Отклонен" {
 		service.DB.Delete(&session)
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf("%v", order.Status))
+		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ORDER_CANCELED)
 		msg.ReplyMarkup = basicKeyboard
 		service.Bot.Send(msg)
 		return
