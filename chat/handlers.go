@@ -20,7 +20,7 @@ func HandleOrderCancel(service *holder.Service, session *storage.Session) {
 	}
 
 	if cancel.Status == "200" {
-		message = "Ваш заказ отменен"
+		message = BOT_ORDER_CANCELED_BY_USER
 		keyboard = GetBasicKeyboard()
 		service.DB.Delete(session)
 	}
@@ -62,7 +62,7 @@ func HandleOrderCreate(service *holder.Service, session *storage.Session) {
 	phone.Text = session.Phone
 	service.DB.FirstOrCreate(&phone, storage.Phone{ChatID: phone.ChatID, Text: phone.Text})
 
-	msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf("Заказ создан! Номер заказа %v", order.OrderId))
+	msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(BOT_ORDER_CREATED, order.OrderId))
 	msg.ReplyMarkup = GetOrderKeyboard()
 	service.Bot.Send(msg)
 }

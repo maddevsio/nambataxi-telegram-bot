@@ -95,7 +95,7 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 
 	if order.Status == "Отклонен" {
 		service.DB.Delete(&session)
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ORDER_CANCELED)
+		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ORDER_CANCELED_BY_OPERATOR)
 		msg.ReplyMarkup = basicKeyboard
 		service.Bot.Send(msg)
 		return
