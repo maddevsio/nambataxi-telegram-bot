@@ -53,6 +53,7 @@ type Order struct {
 	OrderId int `json:"order_id"`
 	Message string `json:"message"`
 	Status string `json:"status"`
+	TripCost string `json:"trip_cost"`
 	Driver struct {
 		Name string `json:"name"`
 		PhoneNumber string `json:"phone_number"`
@@ -61,6 +62,7 @@ type Order struct {
 		Make string `json:"make"`
 		Lat float64 `json:"lat"`
 		Lon float64 `json:"lon"`
+
 	} `json:"driver"`
 }
 
