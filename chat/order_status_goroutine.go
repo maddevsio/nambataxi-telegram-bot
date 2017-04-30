@@ -87,7 +87,7 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 
 	if order.Status == "Выполнен" {
 		service.DB.Delete(&session)
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ORDER_DONE)
+		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(BOT_ORDER_DONE, order.TripCost))
 		msg.ReplyMarkup = basicKeyboard
 		service.Bot.Send(msg)
 		return
