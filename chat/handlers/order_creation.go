@@ -20,5 +20,4 @@ func OrderCreation(service *holder.Service) {
 		msg.ReplyMarkup = chat.GetPhoneKeyboard()
 	}
 	service.Bot.Send(msg)
-
 }

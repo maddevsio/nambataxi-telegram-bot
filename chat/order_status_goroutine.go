@@ -89,6 +89,7 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 		service.DB.Delete(&session)
 		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(BOT_ORDER_DONE, order.TripCost))
 		msg.ReplyMarkup = basicKeyboard
+		msg.ParseMode = "Markdown"
 		service.Bot.Send(msg)
 		return
 	}
