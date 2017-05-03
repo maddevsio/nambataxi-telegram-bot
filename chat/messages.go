@@ -45,6 +45,18 @@ const (
 	BOT_ORDER_CANCELED_BY_OPERATOR = BOT_EMOJI_CRY + " Извините, но Ваш заказ был отклонен оператором. Возможно в вашем районе нет машин"
 	BOT_ORDER_CANCELED_BY_USER = BOT_EMOJI_CRY + " Ваш заказ отменен"
 	BOT_ORDER_CREATED = BOT_EMOJI_THUMUP + " Заказ создан! Номер заказа %v"
+	BOT_SYSTEM_ERROR = "Произошла системная ошибка. Попробуйте еще раз"
+	BOT_ORDER_CANCEL_ERROR = "Ваш заказ уже нельзя отменить, он передан водителю"
+	BOT_ERROR_ORDER_CREATION = "Ошибка создания заказа. Попробуйте еще раз"
+
+	BOT_MESSAGE_START_COMMAND = "/start"
+	BOT_MESSAGE_CANCEL_COMMAND = "/Cancel"
+	BOT_MESSAGE_FARES = "Тарифы"
+	BOT_MESSAGE_MY_ORDER_STATUS = "Узнать статус моего заказа"
+	BOT_MESSAGE_ORDER_FAST_START = "Быстрый заказ такси"
+	BOT_MESSAGE_NEAREST_CARS = "Машины рядом"
+	BOT_MESSAGE_CANCEL = "Отменить мой заказ"
+	BOT_MESSAGE_SEND_MY_PHONE = "Отправить ваш номер телефона"
 )
 
 const (

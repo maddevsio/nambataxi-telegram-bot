@@ -19,12 +19,12 @@ func chatStateMachine(service *holder.Service) {
 
 	if session.ChatID != int64(0) {
 
-		if service.Update.Message.Text == "/Cancel" {
+		if service.Update.Message.Text == chat.BOT_MESSAGE_CANCEL_COMMAND {
 			handlers.CancelNonCreatedOrder(service, chatID)
 			return
 		}
 
-		if service.Update.Message.Text == "Машины рядом" {
+		if service.Update.Message.Text == chat.BOT_MESSAGE_NEAREST_CARS {
 			handlers.NearestDrivers(service, &session)
 			return
 		}
@@ -45,7 +45,7 @@ func chatStateMachine(service *holder.Service) {
 			return
 
 		case storage.STATE_ORDER_CREATED:
-			if service.Update.Message.Text == "Отменить мой заказ" {
+			if service.Update.Message.Text == chat.BOT_MESSAGE_CANCEL {
 				chat.HandleOrderCancel(service, &session)
 				return
 			}
@@ -73,22 +73,22 @@ func chatStateMachine(service *holder.Service) {
 
 	// messages reactions while out of session scope
 
-	if service.Update.Message.Text == "Быстрый заказ такси" {
+	if service.Update.Message.Text == chat.BOT_MESSAGE_ORDER_FAST_START {
 		handlers.OrderCreation(service)
 		return
 	}
 
-	if service.Update.Message.Text == "Тарифы" {
+	if service.Update.Message.Text == chat.BOT_MESSAGE_FARES {
 		handlers.Fares(service)
 		return
 	}
 
-	if service.Update.Message.Text == "Узнать статус моего заказа" {
+	if service.Update.Message.Text == chat.BOT_MESSAGE_MY_ORDER_STATUS {
 		handlers.OrderStatus(service)
 		return
 	}
 
-	if service.Update.Message.Text == "/start" {
+	if service.Update.Message.Text == chat.BOT_MESSAGE_START_COMMAND {
 		handlers.Start(service)
 		return
 	}

@@ -15,7 +15,7 @@ func HandleOrderCancel(service *holder.Service, session *storage.Session) {
 
 	cancel, err := service.NambaTaxiAPI.CancelOrder(session.OrderId)
 	if err != nil {
-		message = "Произошла системная ошибка. Попробуйте еще раз"
+		message = BOT_SYSTEM_ERROR
 		log.Printf("Error canceling order %v", err)
 	}
 
@@ -25,7 +25,7 @@ func HandleOrderCancel(service *holder.Service, session *storage.Session) {
 		service.DB.Delete(session)
 	}
 	if cancel.Status == "400" {
-		message = "Ваш заказ уже нельзя отменить, он передан водителю"
+		message = BOT_ORDER_CANCEL_ERROR
 	}
 
 	msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, message)
@@ -44,7 +44,7 @@ func HandleOrderCreate(service *holder.Service, session *storage.Session) {
 	order, err := service.NambaTaxiAPI.MakeOrder(orderOptions)
 	if err != nil {
 		service.DB.Delete(session)
-		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, "Ошибка создания заказа. Попробуйте еще раз")
+		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ERROR_ORDER_CREATION)
 		service.Bot.Send(msg)
 		return
 	}

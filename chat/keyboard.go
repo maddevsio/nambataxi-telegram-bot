@@ -14,10 +14,10 @@ var NambaTaxiApi api.NambaTaxiAPI
 func GetBasicKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	keyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Быстрый заказ такси"),
+			tgbotapi.NewKeyboardButton(BOT_MESSAGE_ORDER_FAST_START),
 		),
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Тарифы"),
+			tgbotapi.NewKeyboardButton(BOT_MESSAGE_FARES),
 		),
 	)
 	keyboard.OneTimeKeyboard = true
@@ -27,7 +27,7 @@ func GetBasicKeyboard() tgbotapi.ReplyKeyboardMarkup {
 func GetPhoneKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	keyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButtonContact("Отправить ваш номер телефона"),
+			tgbotapi.NewKeyboardButtonContact(BOT_MESSAGE_SEND_MY_PHONE),
 		),
 	)
 	keyboard.OneTimeKeyboard = true
@@ -37,13 +37,13 @@ func GetPhoneKeyboard() tgbotapi.ReplyKeyboardMarkup {
 func GetOrderKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	keyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Узнать статус моего заказа"),
+			tgbotapi.NewKeyboardButton(BOT_MESSAGE_MY_ORDER_STATUS),
 		),
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Машины рядом"),
+			tgbotapi.NewKeyboardButton(BOT_MESSAGE_NEAREST_CARS),
 		),
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Отменить мой заказ"),
+			tgbotapi.NewKeyboardButton(BOT_MESSAGE_CANCEL),
 		),
 	)
 	keyboard.OneTimeKeyboard = true
