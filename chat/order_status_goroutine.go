@@ -80,7 +80,23 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 		loc := tgbotapi.NewLocation(service.Update.Message.Chat.ID, order.Driver.Lat, order.Driver.Lon)
 		loc.ReplyMarkup = orderKeyboard
 		service.Bot.Send(loc)
+		return
+	}
 
+	if order.Status == "Машина на месте" {
+		// send машина на месте
+		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf("%v", order.Status))
+		msg.ReplyMarkup = orderKeyboard
+		service.Bot.Send(msg)
+
+		if order.Driver.Lat == float64(0) || order.Driver.Lon == float64(0) {
+			log.Print("Driver with empty lat or long")
+			return
+		}
+		// send driver locatiob
+		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_DRIVER_LOCATION)
+		msg.ReplyMarkup = orderKeyboard
+		service.Bot.Send(msg)
 
 		return
 	}
