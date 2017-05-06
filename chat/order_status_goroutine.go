@@ -93,7 +93,7 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 			log.Print("Driver with empty lat or long")
 			return
 		}
-		// send driver locatiob
+		// send driver location
 		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_DRIVER_LOCATION)
 		msg.ReplyMarkup = orderKeyboard
 		service.Bot.Send(msg)
