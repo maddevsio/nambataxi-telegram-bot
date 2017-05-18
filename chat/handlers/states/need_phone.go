@@ -11,7 +11,11 @@ import (
 func NeedPhone(service *holder.Service, session *storage.Session, chatID int64) {
 	phone := service.Update.Message.Text
 	if service.Update.Message.Contact != nil {
-		phone = "+" + service.Update.Message.Contact.PhoneNumber
+		if string([]rune(service.Update.Message.Contact.PhoneNumber)[0]) != "+" {
+			phone = "+" + service.Update.Message.Contact.PhoneNumber
+		} else {
+			phone = service.Update.Message.Contact.PhoneNumber
+		}
 	}
 
 	if !strings.HasPrefix(phone, "+996") {
