@@ -51,14 +51,14 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 	var msg tgbotapi.MessageConfig
 
 	if order.Status == "Новый заказ" {
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ORDER_THANKS)
+		msg = tgbotapi.NewMessage(session.ChatID, BOT_ORDER_THANKS)
 		msg.ReplyMarkup = orderKeyboard
 		service.Bot.Send(msg)
 		return
 	}
 
 	if order.Status == "Принят" {
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(
+		msg = tgbotapi.NewMessage(session.ChatID, fmt.Sprintf(
 			BOT_ORDER_ACCEPTED,
 			order.Driver.CabNumber,
 			order.Driver.Name,
@@ -74,10 +74,10 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 			return
 		}
 
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_DRIVER_LOCATION)
+		msg = tgbotapi.NewMessage(session.ChatID, BOT_DRIVER_LOCATION)
 		msg.ReplyMarkup = orderKeyboard
 		service.Bot.Send(msg)
-		loc := tgbotapi.NewLocation(service.Update.Message.Chat.ID, order.Driver.Lat, order.Driver.Lon)
+		loc := tgbotapi.NewLocation(session.ChatID, order.Driver.Lat, order.Driver.Lon)
 		loc.ReplyMarkup = orderKeyboard
 		service.Bot.Send(loc)
 		return
@@ -85,7 +85,7 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 
 	if order.Status == "Машина на месте" {
 		// send машина на месте
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf("%v", order.Status))
+		msg = tgbotapi.NewMessage(session.ChatID, fmt.Sprintf("%v", order.Status))
 		msg.ReplyMarkup = orderKeyboard
 		service.Bot.Send(msg)
 
@@ -94,7 +94,7 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 			return
 		}
 		// send driver location
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_DRIVER_LOCATION)
+		msg = tgbotapi.NewMessage(session.ChatID, BOT_DRIVER_LOCATION)
 		msg.ReplyMarkup = orderKeyboard
 		service.Bot.Send(msg)
 
@@ -103,7 +103,7 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 
 	if order.Status == "Выполнен" {
 		service.DB.Delete(&session)
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(BOT_ORDER_DONE, order.TripCost))
+		msg = tgbotapi.NewMessage(session.ChatID, fmt.Sprintf(BOT_ORDER_DONE, order.TripCost))
 		msg.ReplyMarkup = basicKeyboard
 		msg.ParseMode = "Markdown"
 		service.Bot.Send(msg)
@@ -112,13 +112,13 @@ func OrderStatusReaction(service *holder.Service, order api.Order, session stora
 
 	if order.Status == "Отклонен" {
 		service.DB.Delete(&session)
-		msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ORDER_CANCELED_BY_OPERATOR)
+		msg = tgbotapi.NewMessage(session.ChatID, BOT_ORDER_CANCELED_BY_OPERATOR)
 		msg.ReplyMarkup = basicKeyboard
 		service.Bot.Send(msg)
 		return
 	}
 
-	msg = tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf("%v", order.Status))
+	msg = tgbotapi.NewMessage(session.ChatID, fmt.Sprintf("%v", order.Status))
 	msg.ReplyMarkup = orderKeyboard
 	service.Bot.Send(msg)
 	return
