@@ -22,8 +22,8 @@ func TestGetFares(t *testing.T) {
 	fares, err := api.GetFares()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, fares.Fare[0].Id)
-	assert.Equal(t, 11, fares.Fare[1].Id)
-	assert.Equal(t, 100.0, fares.Fare[1].Flagfall)
+	assert.Equal(t, 21, fares.Fare[1].Id)
+	assert.Equal(t, 70.0, fares.Fare[1].Flagfall)
 	assert.Equal(t, 5, len(fares.Fare))
 }
 
@@ -49,7 +49,7 @@ func TestGetRequestOptions(t *testing.T) {
 	api := getApi()
 	requestOptions, err := api.GetRequestOptions()
 	assert.NoError(t, err)
-	assert.Equal(t, 1, len(requestOptions.RequestOption))
+	assert.Equal(t, 2, len(requestOptions.RequestOption))
 	assert.Equal(t, "Курящий", requestOptions.RequestOption[0].Title)
 }
 
