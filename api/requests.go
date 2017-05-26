@@ -12,10 +12,13 @@ import (
 )
 
 const (
-	PartnerID   = "partner_id"
+	// PartnerID is the var name in API calls
+	PartnerID = "partner_id"
+	// ServerToken is the var name in API calls
 	ServerToken = "server_token"
 )
 
+// NambaTaxiAPI is a main request struct representing Namba Partners API
 type NambaTaxiAPI struct {
 	partnerID   string
 	serverToken string
@@ -23,21 +26,27 @@ type NambaTaxiAPI struct {
 	version     string
 }
 
+// Fares struct represents the list of fares of Namba Taxi
+// fare ID is used when creating an order
 type Fares struct {
 	Fare []struct {
-		Flagfall           float64 `json:"flagfall"`
-		Free_waiting       float64 `json:"free_waiting"`
-		Full_description   string  `json:"full_description"`
-		Include_kilometers int     `json:"include_kilometers"`
-		Id                 int     `json:"id"`
-		Cost_per_kilometer float64 `json:"cost_per_kilometer"`
-		Name               string  `json:"name"`
+		Flagfall          float64 `json:"flagfall"`
+		FreeWaiting       float64 `json:"free_waiting"`
+		FullDescription   string  `json:"full_description"`
+		IncludeKilometers int     `json:"include_kilometers"`
+		ID                int     `json:"id"`
+		CostPerKilometer  float64 `json:"cost_per_kilometer"`
+		Name              string  `json:"name"`
 	} `json:"fares"`
 }
 
+// PaymentMethods represents the list of payment options user can use for a ride
+// In partners API there is no option to change payment option,
+// so all requests are made with "cash" payment method,
+// but this can be changed in future
 type PaymentMethods struct {
 	PaymentMethod []struct {
-		PaymentMethodId int    `json:"payment_method_id"`
+		PaymentMethodID int    `json:"payment_method_id"`
 		Description     string `json:"description"`
 	} `json:"payment_methods"`
 }
@@ -168,7 +177,7 @@ func (api *NambaTaxiAPI) makePostRequest(uri string, postParams map[string][]str
 		values[key] = value
 	}
 
-	resp, err := http.PostForm(api.getApiURL(uri), values)
+	resp, err := http.PostForm(api.getAPIURL(uri), values)
 
 	if err != nil {
 		panic(err)
@@ -185,7 +194,8 @@ func (api *NambaTaxiAPI) makePostRequest(uri string, postParams map[string][]str
 	return body, nil
 }
 
-func (api *NambaTaxiAPI) getApiURL(uri string) string {
+// getAPIURL returns API url with version and URI
+func (api *NambaTaxiAPI) getAPIURL(uri string) string {
 	urlString := fmt.Sprintf("%s/%s/%s/", api.url, api.version, uri)
 	log.Printf("API URL is: %v", urlString)
 	return urlString
