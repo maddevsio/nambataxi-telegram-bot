@@ -79,11 +79,14 @@ type Order struct {
 	} `json:"driver"`
 }
 
+// Cancel struct returns when we cancel an order
 type Cancel struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }
 
+// NearestDrivers return when we call nearest_drivers API
+// "Drivers" is actual fiels, others are for errors and info
 type NearestDrivers struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
