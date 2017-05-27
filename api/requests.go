@@ -51,15 +51,20 @@ type PaymentMethods struct {
 	} `json:"payment_methods"`
 }
 
+// RequestOptions represents the list of options for the order (like
+// "have a cat" or "drunk client"). Currently not used
 type RequestOptions struct {
 	RequestOption []struct {
-		Id    int    `json:"id"`
+		ID    int    `json:"id"`
 		Title string `json:"title"`
 	} `json:"request_options"`
 }
 
+// Order represents an order structure which returns after an order has been created
+// or we ask API about the particular order. When a driver accepts an order
+// than the "Driver" substruct is populated
 type Order struct {
-	OrderId  int    `json:"order_id"`
+	OrderID  int    `json:"order_id"`
 	Message  string `json:"message"`
 	Status   string `json:"status"`
 	TripCost string `json:"trip_cost"`
