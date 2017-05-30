@@ -93,10 +93,14 @@ type NearestDrivers struct {
 	Drivers int    `json:"drivers"`
 }
 
+// NewNambaTaxiApi is the NambaTaxiAPI structure constructor
 func NewNambaTaxiApi(partnerID string, serverToken string, url string, version string) NambaTaxiAPI {
 	return NambaTaxiAPI{partnerID, serverToken, url, version}
 }
 
+// GetNearestDrivers returns the number of free cabs near the given address.
+// The address is specified as real address (like "green street, 6 building"),
+// not coordinates.
 func (api *NambaTaxiAPI) GetNearestDrivers(address string) (NearestDrivers, error) {
 	postParams := map[string][]string{
 		"address": {address},
@@ -109,6 +113,8 @@ func (api *NambaTaxiAPI) GetNearestDrivers(address string) (NearestDrivers, erro
 	return structure, nil
 }
 
+// GetFares return the list of all current fares with full information
+// This info can be shown to the users as well.
 func (api *NambaTaxiAPI) GetFares() (Fares, error) {
 	structure := Fares{}
 	err := api.makePostRequestAndMapStructure(&structure, "fares", make(map[string][]string))
@@ -118,6 +124,8 @@ func (api *NambaTaxiAPI) GetFares() (Fares, error) {
 	return structure, nil
 }
 
+// GetPaymentMethods return the list of active payment methods,
+// but in this bot we use only "cash" option
 func (api *NambaTaxiAPI) GetPaymentMethods() (PaymentMethods, error) {
 	structure := PaymentMethods{}
 	err := api.makePostRequestAndMapStructure(&structure, "payment-methods", make(map[string][]string))
@@ -127,6 +135,8 @@ func (api *NambaTaxiAPI) GetPaymentMethods() (PaymentMethods, error) {
 	return structure, nil
 }
 
+// GetRequestOptions return the list of options user can set to the order.
+// For now we do not use this feature in bot
 func (api *NambaTaxiAPI) GetRequestOptions() (RequestOptions, error) {
 	structure := RequestOptions{}
 	err := api.makePostRequestAndMapStructure(&structure, "request-options", make(map[string][]string))
@@ -136,6 +146,7 @@ func (api *NambaTaxiAPI) GetRequestOptions() (RequestOptions, error) {
 	return structure, nil
 }
 
+// MakeOrder is for order creation. Some code examples can be found in tests
 func (api *NambaTaxiAPI) MakeOrder(orderOptions map[string][]string) (Order, error) {
 	structure := Order{}
 	err := api.makePostRequestAndMapStructure(&structure, "requests", orderOptions)
@@ -145,6 +156,8 @@ func (api *NambaTaxiAPI) MakeOrder(orderOptions map[string][]string) (Order, err
 	return structure, nil
 }
 
+// GetOrder is used to check the order status by its ID. This is useful
+// to inform a user about the order status changing
 func (api *NambaTaxiAPI) GetOrder(id int) (Order, error) {
 	structure := Order{}
 	err := api.makePostRequestAndMapStructure(&structure, "requests/"+strconv.Itoa(id), make(map[string][]string))
@@ -154,6 +167,9 @@ func (api *NambaTaxiAPI) GetOrder(id int) (Order, error) {
 	return structure, nil
 }
 
+// CancelOrder is for oder canceling. An order can be canceled
+// only if it has driver free status. When a driver had accepted an order
+// it can not be canceled
 func (api *NambaTaxiAPI) CancelOrder(id int) (Cancel, error) {
 	structure := Cancel{}
 	err := api.makePostRequestAndMapStructure(&structure, "cancel_order/"+strconv.Itoa(id), make(map[string][]string))
@@ -163,6 +179,8 @@ func (api *NambaTaxiAPI) CancelOrder(id int) (Cancel, error) {
 	return structure, nil
 }
 
+// makePostRequestAndMapStructure is an internal helper func that is used to
+// make a post request and map a giver struct to a returned json
 func (api *NambaTaxiAPI) makePostRequestAndMapStructure(structure interface{}, uri string, postParams map[string][]string) error {
 	jsonData, err := api.makePostRequest(uri, postParams)
 	if err != nil {
@@ -175,6 +193,9 @@ func (api *NambaTaxiAPI) makePostRequestAndMapStructure(structure interface{}, u
 	return nil
 }
 
+// makePostRequest is a helper internal func that is used to
+// form all post params. We just give it what we have, and get
+// the whole list with system post params as well
 func (api *NambaTaxiAPI) makePostRequest(uri string, postParams map[string][]string) ([]byte, error) {
 	var values url.Values = map[string][]string{
 		PartnerID:   {api.partnerID},
