@@ -109,6 +109,10 @@ func TestMakeOrder_GetOrder_DeleteOrder(t *testing.T) {
 
 	cancel2, err := nambaTaxiAPI.CancelOrder(order2.OrderID)
 	assert.Equal(t, "400", cancel2.Status)
+
+	cancel3, err := nambaTaxiAPI.CancelOrder(999)
+	assert.Equal(t, "404", cancel3.Status)
+
 }
 
 func TestMakeOrderNoPhone(t *testing.T) {
@@ -159,4 +163,17 @@ func TestMakeOrderNonExistentFare(t *testing.T) {
 	_, err := nambaTaxiAPI.MakeOrder(orderOptions)
 	assert.Error(t, err)
 	assert.Equal(t, "400 Bad Request", err.Error())
+}
+
+func TestGetOrderError(t *testing.T) {
+	nambaTaxiAPI := getApi()
+	_, err := nambaTaxiAPI.GetOrder(999)
+	assert.Error(t, err)
+	assert.Equal(t, "404 Not Found", err.Error())
+}
+
+func TestCancelOrderError(t *testing.T) {
+	nambaTaxiAPI := getFakeApi()
+	_, err := nambaTaxiAPI.CancelOrder(999)
+	assert.Error(t, err)
 }
