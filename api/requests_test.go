@@ -122,3 +122,41 @@ func TestMakeOrderNoPhone(t *testing.T) {
 	_, err := nambaTaxiAPI.MakeOrder(orderOptions)
 	assert.Error(t, err)
 }
+
+func TestMakeOrderNoAddress(t *testing.T) {
+	nambaTaxiAPI := getApi()
+
+	orderOptions := map[string][]string{
+		"phone_number": {"0555121314"},
+		"fare":         {"1"},
+	}
+
+	_, err := nambaTaxiAPI.MakeOrder(orderOptions)
+	assert.Error(t, err)
+}
+
+func TestMakeOrderNoFare(t *testing.T) {
+	nambaTaxiAPI := getApi()
+
+	orderOptions := map[string][]string{
+		"phone_number": {"0555121314"},
+		"address":      {"ул Советская, дом 1, палата 6"},
+	}
+
+	_, err := nambaTaxiAPI.MakeOrder(orderOptions)
+	assert.Error(t, err)
+}
+
+func TestMakeOrderNonExistentFare(t *testing.T) {
+	nambaTaxiAPI := getApi()
+
+	orderOptions := map[string][]string{
+		"phone_number": {"0555121314"},
+		"address":      {"ул Советская, дом 1, палата 6"},
+		"fare":         {"999"},
+	}
+
+	_, err := nambaTaxiAPI.MakeOrder(orderOptions)
+	assert.Error(t, err)
+	assert.Equal(t, "400 Bad Request", err.Error())
+}
