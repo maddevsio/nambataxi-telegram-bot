@@ -36,6 +36,12 @@ func TestGetFares(t *testing.T) {
 	assert.Equal(t, 5, len(fares.Fare))
 }
 
+func TestGetFaresError(t *testing.T) {
+	nambaTaxiAPI := getFakeApi()
+	_, err := nambaTaxiAPI.GetFares()
+	assert.Error(t, err)
+}
+
 func TestGetPaymentMethods(t *testing.T) {
 	nambaTaxiAPI := getApi()
 	paymentMethods, err := nambaTaxiAPI.GetPaymentMethods()
@@ -43,6 +49,12 @@ func TestGetPaymentMethods(t *testing.T) {
 	assert.Equal(t, 1, paymentMethods.PaymentMethod[0].PaymentMethodID)
 	assert.Equal(t, "Наличными", paymentMethods.PaymentMethod[0].Description)
 	assert.Equal(t, 4, len(paymentMethods.PaymentMethod))
+}
+
+func TestGetPaymentMethodsError(t *testing.T) {
+	nambaTaxiAPI := getFakeApi()
+	_, err := nambaTaxiAPI.GetPaymentMethods()
+	assert.Error(t, err)
 }
 
 func TestGetNearestDrivers(t *testing.T) {
@@ -61,15 +73,21 @@ func TestGetNearestDriversError(t *testing.T) {
 }
 
 func TestGetRequestOptions(t *testing.T) {
-	api := getApi()
-	requestOptions, err := api.GetRequestOptions()
+	nambaTaxiAPI := getApi()
+	requestOptions, err := nambaTaxiAPI.GetRequestOptions()
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(requestOptions.RequestOption))
 	assert.Equal(t, "Курящий", requestOptions.RequestOption[0].Title)
 }
 
+func TestGetRequestOptionsError(t *testing.T) {
+	nambaTaxiAPI := getFakeApi()
+	_, err := nambaTaxiAPI.GetRequestOptions()
+	assert.Error(t, err)
+}
+
 func TestMakeOrder_GetOrder_DeleteOrder(t *testing.T) {
-	api := getApi()
+	nambaTaxiAPI := getApi()
 
 	orderOptions := map[string][]string{
 		"phone_number": {"0555121314"},
@@ -77,19 +95,30 @@ func TestMakeOrder_GetOrder_DeleteOrder(t *testing.T) {
 		"fare":         {"1"},
 	}
 
-	order1, err := api.MakeOrder(orderOptions)
+	order1, err := nambaTaxiAPI.MakeOrder(orderOptions)
 	assert.NoError(t, err)
 	assert.Equal(t, "success", order1.Message)
 
-	order2, err := api.GetOrder(order1.OrderID)
+	order2, err := nambaTaxiAPI.GetOrder(order1.OrderID)
 	assert.NoError(t, err)
 	assert.Equal(t, order1.OrderID, order2.OrderID)
 	assert.Equal(t, "Новый заказ", order2.Status)
 
-	cancel1, err := api.CancelOrder(order1.OrderID)
+	cancel1, err := nambaTaxiAPI.CancelOrder(order1.OrderID)
 	assert.Equal(t, "200", cancel1.Status)
 
-	cancel2, err := api.CancelOrder(order2.OrderID)
+	cancel2, err := nambaTaxiAPI.CancelOrder(order2.OrderID)
 	assert.Equal(t, "400", cancel2.Status)
 }
 
+func TestMakeOrderNoPhone(t *testing.T) {
+	nambaTaxiAPI := getApi()
+
+	orderOptions := map[string][]string{
+		"address":      {"ул Советская, дом 1, палата 6"},
+		"fare":         {"1"},
+	}
+
+	_, err := nambaTaxiAPI.MakeOrder(orderOptions)
+	assert.Error(t, err)
+}
