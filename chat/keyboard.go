@@ -95,7 +95,7 @@ func GetFareIdByName(fareName string) (int, error) {
 	}
 	for _, fare := range fares.Fare {
 		if fare.Name == fareName {
-			return fare.Id, nil
+			return fare.ID, nil
 		}
 	}
 	return 0, errors.New(fmt.Sprintf("Cannot find fare with name %v", fareName))

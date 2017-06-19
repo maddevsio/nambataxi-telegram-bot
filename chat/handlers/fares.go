@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"gopkg.in/telegram-bot-api.v4"
-	"github.com/maddevsio/nambataxi-telegram-bot/chat"
 	"fmt"
+
+	"github.com/maddevsio/nambataxi-telegram-bot/chat"
 	"github.com/maddevsio/nambataxi-telegram-bot/holder"
+	"gopkg.in/telegram-bot-api.v4"
 )
 
 func Fares(service *holder.Service) {
@@ -21,7 +22,7 @@ func Fares(service *holder.Service) {
 		faresText = faresText + fmt.Sprintf(chat.BOT_FARE_INFO,
 			fare.Name,
 			fare.Flagfall,
-			fare.Cost_per_kilometer,
+			fare.CostPerKilometer,
 		)
 	}
 

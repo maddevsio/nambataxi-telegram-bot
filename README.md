@@ -1,4 +1,6 @@
 # Namba Taxi Telegram Bot
-Order a Namba Taxi cab via Telegram
+http://t.me/namba_taxi_bot -- Order a Namba Taxi cab via Telegram
 
-Namba Taxi API doc: https://docs.google.com/document/d/1o-nIfqHVNG0Jkw3LrFhpKERkWIqDauXLk5LO7s_xzrA/edit
+<img src="https://github.com/maddevsio/nambataxi-telegram-bot/raw/master/bot-screenshot-1.jpg" width="250"> <img src="https://github.com/maddevsio/nambataxi-telegram-bot/raw/master/bot-screenshot-2.jpg" width="250"> <img src="https://github.com/maddevsio/nambataxi-telegram-bot/raw/master/bot-screenshot-3.jpg" width="250">
+
+Namba Taxi API doc: https://apidoc.swift.kg

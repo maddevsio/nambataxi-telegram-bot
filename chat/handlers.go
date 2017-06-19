@@ -60,7 +60,7 @@ func HandleOrderCreate(service *holder.Service, session *storage.Session) {
 		return
 	}
 	session.State = storage.STATE_ORDER_CREATED
-	session.OrderId = order.OrderId
+	session.OrderId = order.OrderID
 	service.DB.Save(session)
 
 	address := storage.Address{}
@@ -73,7 +73,7 @@ func HandleOrderCreate(service *holder.Service, session *storage.Session) {
 	phone.Text = session.Phone
 	service.DB.FirstOrCreate(&phone, storage.Phone{ChatID: phone.ChatID, Text: phone.Text})
 
-	msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(BOT_ORDER_CREATED, order.OrderId))
+	msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, fmt.Sprintf(BOT_ORDER_CREATED, order.OrderID))
 	msg.ReplyMarkup = GetOrderKeyboard()
 	service.Bot.Send(msg)
 }
