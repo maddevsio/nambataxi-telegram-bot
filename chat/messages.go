@@ -48,6 +48,7 @@ const (
 	BOT_SYSTEM_ERROR = "Произошла системная ошибка. Попробуйте еще раз"
 	BOT_ORDER_CANCEL_ERROR = "Ваш заказ уже нельзя отменить, он передан водителю"
 	BOT_ERROR_ORDER_CREATION = "Ошибка создания заказа. Попробуйте еще раз"
+	BOT_ERROR_ORDER_LOCATION = "Бот принимает только текстовый адрес, например \"Ибраимова, 103\""
 
 	BOT_MESSAGE_START_COMMAND = "/start"
 	BOT_MESSAGE_CANCEL_COMMAND = "/Cancel"

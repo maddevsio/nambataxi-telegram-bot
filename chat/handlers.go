@@ -34,6 +34,16 @@ func HandleOrderCancel(service *holder.Service, session *storage.Session) {
 }
 
 func HandleOrderCreate(service *holder.Service, session *storage.Session) {
+	if service.Update.Message.Location != nil {
+		addresses := storage.GetLastAddressByChatID(service.DB, session.ChatID)
+		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ERROR_ORDER_LOCATION)
+		if len(addresses) > 0 {
+			msg.ReplyMarkup = GetAddressKeyboard(addresses)
+		}
+		service.Bot.Send(msg)
+		return
+	}
+
 	session.Address = service.Update.Message.Text
 	orderOptions := map[string][]string{
 		"phone_number": {session.Phone},
@@ -45,6 +55,7 @@ func HandleOrderCreate(service *holder.Service, session *storage.Session) {
 	if err != nil {
 		service.DB.Delete(session)
 		msg := tgbotapi.NewMessage(service.Update.Message.Chat.ID, BOT_ERROR_ORDER_CREATION)
+		msg.ReplyMarkup = GetBasicKeyboard()
 		service.Bot.Send(msg)
 		return
 	}
