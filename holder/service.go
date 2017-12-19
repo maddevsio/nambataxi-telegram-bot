@@ -1,10 +1,10 @@
 package holder
 
 import (
-	"gopkg.in/telegram-bot-api.v4"
 	"github.com/jinzhu/gorm"
-	"github.com/maddevsio/nambataxi-telegram-bot/api"
+	"github.com/maddevsio/nambataxi-api-go-client/api"
 	"github.com/maddevsio/simple-config"
+	"gopkg.in/telegram-bot-api.v4"
 )
 
 type Service struct {

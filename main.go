@@ -3,18 +3,19 @@ package main
 import (
 	"log"
 
-	"github.com/maddevsio/nambataxi-telegram-bot/api"
+	"strconv"
+
+	"github.com/maddevsio/nambataxi-api-go-client/api"
 	"github.com/maddevsio/nambataxi-telegram-bot/chat"
+	"github.com/maddevsio/nambataxi-telegram-bot/holder"
 	"github.com/maddevsio/nambataxi-telegram-bot/storage"
 	"github.com/maddevsio/simple-config"
 	"gopkg.in/telegram-bot-api.v4"
-	"strconv"
-	"github.com/maddevsio/nambataxi-telegram-bot/holder"
 )
 
 var (
-	service  holder.Service
-	err error
+	service holder.Service
+	err     error
 )
 
 func main() {

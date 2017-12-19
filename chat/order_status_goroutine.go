@@ -1,13 +1,14 @@
 package chat
 
 import (
-	"gopkg.in/telegram-bot-api.v4"
 	"fmt"
-	"github.com/maddevsio/nambataxi-telegram-bot/api"
-	"github.com/maddevsio/nambataxi-telegram-bot/storage"
-	"time"
 	"log"
+	"time"
+
+	"github.com/maddevsio/nambataxi-api-go-client/api"
 	"github.com/maddevsio/nambataxi-telegram-bot/holder"
+	"github.com/maddevsio/nambataxi-telegram-bot/storage"
+	"gopkg.in/telegram-bot-api.v4"
 )
 
 func StartStatusReactionGoroutine(service *holder.Service, session storage.Session) {

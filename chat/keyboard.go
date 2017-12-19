@@ -1,12 +1,13 @@
 package chat
 
 import (
-	"gopkg.in/telegram-bot-api.v4"
+	"errors"
 	"fmt"
 	"log"
-	"errors"
-	"github.com/maddevsio/nambataxi-telegram-bot/api"
+
+	"github.com/maddevsio/nambataxi-api-go-client/api"
 	"github.com/maddevsio/nambataxi-telegram-bot/storage"
+	"gopkg.in/telegram-bot-api.v4"
 )
 
 var NambaTaxiApi api.NambaTaxiAPI
