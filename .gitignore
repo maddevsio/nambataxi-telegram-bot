@@ -3,3 +3,4 @@ config.yaml
 namba-taxi-bot.db
 .DS_Store
 nambataxi-telegram-bot
+env.list
