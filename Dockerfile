@@ -1,5 +1,5 @@
 # Containter for Namba Taxi Telegram Bot
-FROM golang:1.8
+FROM golang:1.9
 LABEL Description="Order a Namba Taxi cab via Telegram" Vendor="Mad Devs" Version="1.9"
 MAINTAINER Oleg Puzanov <puzanov@gmail.com>
 RUN go get -v github.com/maddevsio/nambataxi-telegram-bot

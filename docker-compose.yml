@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+    nambataxibot:
+        build: .
+        restart: always
+        env_file:
+          - env.list
+        volumes:
+          - './data:/go/data'
